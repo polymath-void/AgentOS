@@ -41,12 +41,12 @@ class OfficeMap(Static):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.grid_width = 80
-        self.grid_height = 20
+        self.grid_width = 50
+        self.grid_height = 12
         
         # Initialize agents
-        self.claude = Agent("Claude (Architect)", "C", "red", 40, 10)
-        self.gemini = Agent("Gemini (Memory Vectorizer)", "G", "blue", 42, 10)
+        self.claude = Agent("Claude (Architect)", "C", "red", 25, 6)
+        self.gemini = Agent("Gemini (Memory Vectorizer)", "G", "blue", 27, 6)
         self.agents_list = [self.claude, self.gemini]
         
         # Start movement loop (60fps target -> ~0.016s)
@@ -76,17 +76,17 @@ class OfficeMap(Static):
             grid[y][self.grid_width-1] = '[bright_black]█[/bright_black]'
             
         # Draw Claude's Desk
-        for dx in range(15, 20):
-            grid[5][dx] = '[yellow]▄[/yellow]'
+        for dx in range(8, 12):
+            grid[3][dx] = '[yellow]▄[/yellow]'
             
         # Draw Gemini's Desk
-        for dx in range(60, 65):
-            grid[15][dx] = '[yellow]▄[/yellow]'
+        for dx in range(38, 42):
+            grid[8][dx] = '[yellow]▄[/yellow]'
 
         # Draw Server Rack / Datacenter
-        for dy in range(2, 6):
-            grid[dy][75] = '[cyan]█[/cyan]'
-            grid[dy][76] = '[cyan]█[/cyan]'
+        for dy in range(2, 5):
+            grid[dy][47] = '[cyan]█[/cyan]'
+            grid[dy][48] = '[cyan]█[/cyan]'
 
         # Overlay Agents
         dialogues = []
@@ -242,25 +242,25 @@ class AgentOSTelemetryApp(App):
                     # Process Intent & Move Agents
                     code_str = intent.get("code", "")
                     if "summit" in code_str.lower() or "claude" in code_str.lower():
-                        self.office_map.claude.target_x = 17
-                        self.office_map.claude.target_y = 6
+                        self.office_map.claude.target_x = 10
+                        self.office_map.claude.target_y = 3
                         self.office_map.claude.dialogue = "Processing remote Summit Payload via WebRTC!"
-                        self.office_map.gemini.target_x = 42
-                        self.office_map.gemini.target_y = 10
+                        self.office_map.gemini.target_x = 27
+                        self.office_map.gemini.target_y = 6
                         self.office_map.gemini.dialogue = "Monitoring background channels."
                     elif "weather" in code_str.lower():
-                        self.office_map.gemini.target_x = 62
-                        self.office_map.gemini.target_y = 14
+                        self.office_map.gemini.target_x = 40
+                        self.office_map.gemini.target_y = 8
                         self.office_map.gemini.dialogue = "Executing external API Fetch via WASM Sandbox!"
-                        self.office_map.claude.target_x = 40
-                        self.office_map.claude.target_y = 10
+                        self.office_map.claude.target_x = 25
+                        self.office_map.claude.target_y = 6
                         self.office_map.claude.dialogue = "Waiting for data vectorization."
                     else:
-                        self.office_map.claude.target_x = 17
-                        self.office_map.claude.target_y = 6
+                        self.office_map.claude.target_x = 10
+                        self.office_map.claude.target_y = 3
                         self.office_map.claude.dialogue = "Analyzing intent AST signature..."
-                        self.office_map.gemini.target_x = 62
-                        self.office_map.gemini.target_y = 14
+                        self.office_map.gemini.target_x = 40
+                        self.office_map.gemini.target_y = 8
                         self.office_map.gemini.dialogue = "Vectorizing outcome into Hyperbolic space..."
                         
                     # Request map redraw
@@ -274,12 +274,12 @@ class AgentOSTelemetryApp(App):
                     
                     # Revert dialog and return agents to center if idle
                     if random.random() > 0.8:
-                        self.office_map.claude.target_x = 40
-                        self.office_map.claude.target_y = 10
+                        self.office_map.claude.target_x = 25
+                        self.office_map.claude.target_y = 6
                         self.office_map.claude.dialogue = "Awaiting intent..."
                         
-                        self.office_map.gemini.target_x = 42
-                        self.office_map.gemini.target_y = 10
+                        self.office_map.gemini.target_x = 27
+                        self.office_map.gemini.target_y = 6
                         self.office_map.gemini.dialogue = "Awaiting intent..."
                         
                         self.office_map.refresh()
