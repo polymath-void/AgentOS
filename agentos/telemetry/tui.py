@@ -6,265 +6,190 @@ import json
 try:
     from textual.app import App, ComposeResult
     from textual.containers import Horizontal, Vertical
-    from textual.widgets import Static, Log, ProgressBar
+    from textual.widgets import Static, Log, ProgressBar, TabbedContent, TabPane, TextArea, Label, DataTable
     from textual.reactive import reactive
 except ImportError:
     print("AgentOS Visual Telemetry requires the 'textual' framework.")
     print("Please install it by running: pip install textual rich")
     sys.exit(1)
 
-
 class Agent:
-    def __init__(self, name: str, symbol: str, color: str, x_pct: float, y_pct: float):
+    def __init__(self, name: str, symbol: str, color: str, x: int, y: int):
         self.name = name
         self.symbol = symbol
         self.color = color
-        self.x_pct = x_pct
-        self.y_pct = y_pct
-        self.target_x_pct = x_pct
-        self.target_y_pct = y_pct
-        self.dialogue = "Awaiting intent..."
-        self.status = "idle"
+        self.x = x
+        self.y = y
+        self.target_x = x
+        self.target_y = y
+        self.status = "idle"  # idle, working, speaking, tool
+        self.dialogue = ""
 
-    def get_display(self) -> str:
+    def get_avatar(self) -> str:
         emojis = {"idle": "💤", "working": "⠷", "speaking": "💬", "tool": "🛠️"}
-        return f"[bold {self.color}]{self.symbol}[/bold {self.color}]{emojis.get(self.status, '')}"
+        return f"[bold {self.color}]{self.symbol}[/]{emojis.get(self.status, '💤')}"
 
-    def move(self, speed: float) -> bool:
-        dx = self.target_x_pct - self.x_pct
-        dy = self.target_y_pct - self.y_pct
-        dist = (dx**2 + dy**2)**0.5
-        if dist > 0.01:
-            self.x_pct += (dx / dist) * speed
-            self.y_pct += (dy / dist) * speed
+    def move(self) -> bool:
+        if self.x < self.target_x:
+            self.x += 1
+            return True
+        elif self.x > self.target_x:
+            self.x -= 1
+            return True
+        elif self.y < self.target_y:
+            self.y += 1
+            return True
+        elif self.y > self.target_y:
+            self.y -= 1
             return True
         return False
 
 class OfficeMap(Static):
-    """A Dynamic 2D Virtual Office Map using Rich Text."""
-
+    """The OpenClaw Virtual Office Floor Plan."""
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        # Initialize agents (positions as percentages 0.0-1.0)
-        self.claude = Agent("Claude (Architect)", "C", "red", 0.2, 0.25)
-        self.gemini = Agent("Gemini (Memory Vectorizer)", "G", "blue", 0.8, 0.75)
-        self.agents_list = [self.claude, self.gemini]
-        self.draw_collab_line = False
+        self.agents = {
+            "Claude": Agent("Claude", "🤖", "red", 6, 3),
+            "Gemini": Agent("Gemini", "🦉", "blue", 45, 3)
+        }
+        self.collab_lines = []
+        self.set_interval(0.1, self.tick)
         
-        # Start movement loop
-        self.update_timer = self.set_interval(1 / 60, self.tick)
-
     def tick(self) -> None:
         changed = False
-        speed = 0.01  # Agent movement speed in %
-        for agent in self.agents_list:
-            if agent.move(speed):
+        for agent in self.agents.values():
+            if agent.move():
                 changed = True
         if changed:
             self.refresh(layout=True)
 
     def render(self) -> str:
-        width = max(20, self.size.width)
-        height = max(10, self.size.height)
+        width = max(30, self.size.width)
+        height = max(10, self.size.height) - 4
         
-        # Reserve space for dialogues at the bottom
-        grid_height = max(5, height - 6)
-        grid_width = width
+        grid = [[' ' for _ in range(width)] for _ in range(height)]
         
-        # Build base grid
-        grid = [['[grey37]·[/grey37]' for _ in range(grid_width)] for _ in range(grid_height)]
+        # Draw Boundary
+        for x in range(width):
+            grid[0][x] = '─'
+            grid[height-1][x] = '─'
+        for y in range(height):
+            grid[y][0] = '│'
+            grid[y][width-1] = '│'
+        grid[0][0] = '╭'
+        grid[0][width-1] = '╮'
+        grid[height-1][0] = '╰'
+        grid[height-1][width-1] = '╯'
         
-        # Draw Walls
-        for x in range(grid_width):
-            grid[0][x] = '[bright_black]█[/bright_black]'
-            grid[grid_height-1][x] = '[bright_black]█[/bright_black]'
-        for y in range(grid_height):
-            grid[y][0] = '[bright_black]█[/bright_black]'
-            grid[y][grid_width-1] = '[bright_black]█[/bright_black]'
-            
-        # Draw Claude's Desk (15% to 25% width, 25% height)
-        c_start = int(0.15 * grid_width)
-        c_end = int(0.25 * grid_width)
-        c_y = int(0.25 * grid_height)
-        for dx in range(c_start, c_end):
-            if dx < grid_width: grid[c_y][dx] = '[yellow]▄[/yellow]'
-            
-        # Draw Gemini's Desk (75% to 85% width, 75% height)
-        g_start = int(0.75 * grid_width)
-        g_end = int(0.85 * grid_width)
-        g_y = int(0.75 * grid_height)
-        for dx in range(g_start, g_end):
-            if dx < grid_width: grid[g_y][dx] = '[yellow]▄[/yellow]'
+        # Draw Claude Desk
+        self._draw_box(grid, 2, 2, 10, 4, "[bright_black]Claude Desk[/]")
+        
+        # Draw Gemini Desk
+        g_desk_x = width - 12
+        if g_desk_x > 12:
+            self._draw_box(grid, g_desk_x, 2, width - 4, 4, "[bright_black]Gemini Desk[/]")
+        
+        # Draw Meeting Pod
+        pod_w = 20
+        pod_h = 6
+        cx = width // 2
+        cy = height // 2
+        if cx - pod_w//2 > 0 and cy - pod_h//2 > 0:
+            self._draw_box(grid, cx - pod_w//2, cy - pod_h//2, cx + pod_w//2, cy + pod_h//2, "[magenta]Meeting Pod[/]")
 
-        # Draw Server Rack (90% width, 20% to 40% height)
-        s_x1, s_x2 = int(0.9 * grid_width), int(0.92 * grid_width)
-        s_y1, s_y2 = int(0.2 * grid_height), int(0.4 * grid_height)
-        for dy in range(s_y1, s_y2):
-            if dy < grid_height:
-                if s_x1 < grid_width: grid[dy][s_x1] = '[cyan]█[/cyan]'
-                if s_x2 < grid_width: grid[dy][s_x2] = '[cyan]█[/cyan]'
+        # Draw Collaboration Line
+        if self.collab_lines:
+            c1, c2 = self.agents["Claude"], self.agents["Gemini"]
+            # simple straight line between them roughly
+            for x in range(min(c1.x, c2.x) + 2, max(c1.x, c2.x)):
+                if 0 < x < width and 0 < c1.y < height:
+                    if grid[c1.y][x] == ' ':
+                        grid[c1.y][x] = '[green]┈[/]'
 
-        # Draw Meeting Pod (Center of the room)
-        mp_x1, mp_x2 = int(0.40 * grid_width), int(0.60 * grid_width)
-        mp_y1, mp_y2 = int(0.40 * grid_height), int(0.60 * grid_height)
-        if mp_x2 > mp_x1 and mp_y2 > mp_y1:
-            if mp_y1 < grid_height: grid[mp_y1][mp_x1:mp_x2+1] = ['[magenta]─[/magenta]'] * (mp_x2 - mp_x1 + 1)
-            if mp_y2 < grid_height: grid[mp_y2][mp_x1:mp_x2+1] = ['[magenta]─[/magenta]'] * (mp_x2 - mp_x1 + 1)
-            for dy in range(mp_y1, mp_y2 + 1):
-                if dy < grid_height:
-                    grid[dy][mp_x1] = '[magenta]│[/magenta]'
-                    grid[dy][mp_x2] = '[magenta]│[/magenta]'
-            if mp_y1 < grid_height: 
-                grid[mp_y1][mp_x1] = '[magenta]╭[/magenta]'
-                grid[mp_y1][mp_x2] = '[magenta]╮[/magenta]'
-            if mp_y2 < grid_height:
-                grid[mp_y2][mp_x1] = '[magenta]╰[/magenta]'
-                grid[mp_y2][mp_x2] = '[magenta]╯[/magenta]'
-
-        # Draw Collaboration Lines (Bresenham)
-        if self.draw_collab_line:
-            x0 = int(round(self.claude.x_pct * grid_width))
-            y0 = int(round(self.claude.y_pct * grid_height))
-            x1 = int(round(self.gemini.x_pct * grid_width))
-            y1 = int(round(self.gemini.y_pct * grid_height))
-            
-            dx = abs(x1 - x0)
-            dy = abs(y1 - y0)
-            sx = 1 if x0 < x1 else -1
-            sy = 1 if y0 < y1 else -1
-            err = dx - dy
-            
-            while True:
-                if 0 <= x0 < grid_width and 0 <= y0 < grid_height:
-                    # don't overwrite walls or desks or meeting pod walls
-                    cell = grid[y0][x0]
-                    if '·' in cell or ' ' in cell:
-                        grid[y0][x0] = '[green]┈[/green]'
-                if x0 == x1 and y0 == y1:
-                    break
-                e2 = 2 * err
-                if e2 > -dy:
-                    err -= dy
-                    x0 += sx
-                if e2 < dx:
-                    err += dx
-                    y0 += sy
-
-        # Overlay Agents
+        # Overlay Agents & Dialogues
         dialogues = []
-        for agent in self.agents_list:
-            ax = int(round(agent.x_pct * grid_width))
-            ay = int(round(agent.y_pct * grid_height))
-            # Keep within bounds and avoid clipping the right edge due to emoji width
-            ax = max(1, min(grid_width - 3, ax))
-            ay = max(1, min(grid_height - 2, ay))
-            
-            grid[ay][ax] = agent.get_display()
-            # Clear the adjacent cell to compensate for double-width emoji rendering in terminal
-            if ax + 1 < grid_width:
-                grid[ay][ax + 1] = ''
-            
+        for agent in self.agents.values():
+            ax, ay = agent.x, agent.y
+            if 0 < ax < width - 2 and 0 < ay < height - 1:
+                grid[ay][ax] = agent.get_avatar()
+                grid[ay][ax+1] = '' # Emoji width comp
             if agent.dialogue:
-                dialogues.append(f"[{agent.color}]{agent.name}[/{agent.color}]: {agent.dialogue}")
+                dialogues.append(f"[{agent.color}]{agent.name}[/]: {agent.dialogue}")
 
-        # Render rows
-        lines = ["".join(filter(None, grid[y])) for y in range(grid_height)]
-            
-        map_str = "\n".join(lines)
+        # Render
+        lines = ["".join(filter(None, row)) for row in grid]
+        out = "\n".join(lines)
         if dialogues:
-            map_str += "\n\n" + "\n".join(dialogues)
-            
-        return map_str
+            out += "\n\n" + "\n".join(dialogues[-2:])
+        return out
+        
+    def _draw_box(self, grid, x1, y1, x2, y2, title):
+        if not (0 <= x1 < x2 < len(grid[0]) and 0 <= y1 < y2 < len(grid)): return
+        for x in range(x1, x2 + 1):
+            grid[y1][x] = '─'
+            grid[y2][x] = '─'
+        for y in range(y1, y2 + 1):
+            grid[y][x1] = '│'
+            grid[y][x2] = '│'
+        grid[y1][x1] = '╭'
+        grid[y1][x2] = '╮'
+        grid[y2][x1] = '╰'
+        grid[y2][x2] = '╯'
+        # title
+        t_str = f" {title} "
+        if x1 + 2 + 15 < x2:
+            grid[y1][x1+2] = t_str
+            for i in range(x1+3, x1+3+12):
+                grid[y1][i] = ''
 
-
-class AgentOSTelemetryApp(App):
-    """
-    The AgentOS Swarm Dashboard.
-    Visualizes WASM fuel, ZeroMQ active connections, and dynamic Virtual Office Map.
-    """
+class DashboardApp(App):
     CSS = """
-    Screen {
-        layout: vertical;
-        background: $surface;
-    }
-    
-    #header {
-        height: 3;
-        content-align: center middle;
-        background: $boost;
-        border-bottom: heavy $accent;
-    }
-    
-    #fuel_station {
-        height: auto;
-        padding: 1 2;
-        border-bottom: dashed $secondary;
-        background: $panel;
-    }
-    
-    .fuel_row {
-        height: 1;
-        margin-bottom: 1;
-    }
-    
-    .fuel_label {
-        width: 20;
-        content-align: right middle;
-    }
-    
-    #office_floor {
-        height: 1fr;
-        align: center middle;
-        padding: 1;
-    }
-    
-    #event_stream {
-        height: 10;
-        border-top: solid $primary;
-        background: $panel;
-    }
+    Screen { background: $surface; }
+    #header { height: 3; content-align: center middle; background: $boost; border-bottom: heavy $accent; }
+    .side_panel { width: 35%; border-left: solid $primary; padding: 1; }
+    .map_container { width: 65%; padding: 1; }
+    #event_stream { height: 1fr; border: solid $secondary; }
     """
 
     def compose(self) -> ComposeResult:
-        # Top Header
-        yield Static("[bold cyan]AgentOS Headquarters - Virtual Office Interface[/bold cyan] | Active Nodes: 4", id="header")
+        yield Static("[bold cyan]AgentOS OpenClaw Frontend[/bold cyan] | Digital Twin Office", id="header")
         
-        # Fuel Diagnostics
-        with Vertical(id="fuel_station"):
-            yield Static("⚡ [bold yellow]WASM Sandbox Fuel Capacity[/] ⚡")
-            with Horizontal(classes="fuel_row"):
-                yield Static("Tokyo-Prime: ", classes="fuel_label")
-                yield ProgressBar(total=10000, id="tokyo_fuel", show_eta=False)
-            with Horizontal(classes="fuel_row"):
-                yield Static("London-Edge: ", classes="fuel_label")
-                yield ProgressBar(total=10000, id="london_fuel", show_eta=False)
-
-        # Main View: Open Office Map
-        with Vertical(id="office_floor"):
-            self.office_map = OfficeMap()
-            yield self.office_map
-
-        # Bottom Panel: Log Stream
-        self.event_stream = Log(id="event_stream", highlight=True)
-        yield self.event_stream
+        with TabbedContent():
+            with TabPane("🏢 Virtual Office"):
+                with Horizontal():
+                    with Vertical(classes="map_container"):
+                        self.office_map = OfficeMap()
+                        yield self.office_map
+                    with Vertical(classes="side_panel"):
+                        yield Static("📊 [bold]Agent Telemetry[/bold]\n")
+                        yield Label("Tokyo-Prime Fuel:")
+                        yield ProgressBar(total=1000, id="fuel_tokyo", show_eta=False)
+                        yield Label("\nLondon-Edge Fuel:")
+                        yield ProgressBar(total=1000, id="fuel_london", show_eta=False)
+                        self.telemetry_log = Log(id="telemetry_log")
+                        yield self.telemetry_log
+                        
+            with TabPane("💻 Skill Workbench"):
+                with Horizontal():
+                    self.skill_editor = TextArea(
+                        "name: example_skill\ntype: workflow\n---\ndef run():\n    return 'Hello World'", 
+                        language="python"
+                    )
+                    yield self.skill_editor
+                    yield Log(id="mermaid_preview")
+                    
+            with TabPane("⚙️ Console"):
+                self.event_stream = Log(id="event_stream", highlight=True)
+                yield self.event_stream
 
     async def on_mount(self) -> None:
-        """Starts the background telemetry fetchers upon mounting the UI."""
-        tokyo_bar = self.query_one("#tokyo_fuel", ProgressBar)
-        london_bar = self.query_one("#london_fuel", ProgressBar)
-        
-        tokyo_bar.advance(8500)
-        london_bar.advance(7200)
-        
-        self.event_stream.write("[System] AgentOS TUI Initialized. 2D Virtual Office Layout Loaded.")
-        self.event_stream.write("[Mesh] ZeroMQ ROUTER bound to tcp://0.0.0.0:5557")
-        self.event_stream.write("[WebRTC] STUN Resolution successful. P2P Tunnels Open.")
-        
-        # Start a background task to listen to incoming swarm telemetry
+        self.query_one("#fuel_tokyo", ProgressBar).advance(800)
+        self.query_one("#fuel_london", ProgressBar).advance(700)
+        self.query_one("#mermaid_preview", Log).write("graph TD;\n    A-->B;\n    A-->C;\n    B-->D;\n    C-->D;")
+        self.event_stream.write("[System] OpenClaw Dashboard Online.")
         self.run_worker(self.listen_swarm_traffic(), exclusive=True)
 
     async def listen_swarm_traffic(self) -> None:
-        """Listens asynchronously to the AgentOS Kernel PUB socket."""
         import zmq
         import zmq.asyncio
         
@@ -273,96 +198,63 @@ class AgentOSTelemetryApp(App):
         socket.connect("tcp://127.0.0.1:5562")
         socket.setsockopt_string(zmq.SUBSCRIBE, "TELEMETRY")
         
-        self.event_stream.write("[Telemetry] Subscribed to real-time intent stream on tcp://127.0.0.1:5562")
+        self.event_stream.write("[Telemetry] Subscribed to 5562")
+        self.telemetry_log.write("Awaiting ZeroMQ Swarm Intents...\n")
         
-        tokyo_bar = self.query_one("#tokyo_fuel", ProgressBar)
-        london_bar = self.query_one("#london_fuel", ProgressBar)
+        tokyo_bar = self.query_one("#fuel_tokyo", ProgressBar)
         
         while True:
             try:
                 events = await socket.poll(timeout=1000)
                 if events:
-                    message = await socket.recv_string()
-                    payload_str = message.replace("TELEMETRY ", "", 1)
-                    intent = json.loads(payload_str)
+                    msg = await socket.recv_string()
+                    payload = json.loads(msg.replace("TELEMETRY ", "", 1))
                     
-                    self.event_stream.write(f"[Intent-Intercept] Payload: {str(intent)[:80]}...")
+                    self.event_stream.write(f"Intercept: {str(payload)[:80]}")
+                    self.telemetry_log.write(f"> {payload.get('code', 'unknown')[:30]}")
                     
-                    # Visually consume fuel
-                    tokyo_consume = random.randint(100, 1000)
-                    london_consume = random.randint(100, 1000)
+                    if tokyo_bar.progress > 50: tokyo_bar.advance(-50)
+                    else: tokyo_bar.progress = 1000
                     
-                    if tokyo_bar.progress > tokyo_consume:
-                        tokyo_bar.advance(-tokyo_consume)
+                    c = self.office_map.agents["Claude"]
+                    g = self.office_map.agents["Gemini"]
+                    
+                    cx = self.office_map.size.width // 2
+                    cy = max(3, self.office_map.size.height // 2)
+                    
+                    code = payload.get("code", "").lower()
+                    if "summit" in code or "claude" in code:
+                        c.target_x, c.target_y = cx - 5, cy
+                        c.status = "working"
+                        c.dialogue = "Processing Summit Payload!"
+                        g.target_x, g.target_y = cx + 5, cy
+                        g.status = "speaking"
+                        g.dialogue = "Joining swarm pod."
+                        self.office_map.collab_lines = [True]
                     else:
-                        tokyo_bar.progress = 0
+                        c.target_x, c.target_y = 6, 3
+                        c.status = "idle"
+                        c.dialogue = ""
+                        g.target_x, g.target_y = max(10, self.office_map.size.width - 8), 3
+                        g.status = "tool"
+                        g.dialogue = "Vectorizing..."
+                        self.office_map.collab_lines = []
                         
-                    if london_bar.progress > london_consume:
-                        london_bar.advance(-london_consume)
-                    else:
-                        london_bar.progress = 0
-                    
-                    # Process Intent & Move Agents
-                    code_str = intent.get("code", "")
-                    if "summit" in code_str.lower() or "claude" in code_str.lower():
-                        self.office_map.claude.target_x_pct = 0.45
-                        self.office_map.claude.target_y_pct = 0.50
-                        self.office_map.claude.status = "working"
-                        self.office_map.claude.dialogue = "Processing remote Summit Payload via WebRTC!"
-                        self.office_map.gemini.target_x_pct = 0.55
-                        self.office_map.gemini.target_y_pct = 0.50
-                        self.office_map.gemini.status = "idle"
-                        self.office_map.gemini.dialogue = "Monitoring background channels."
-                        self.office_map.draw_collab_line = True
-                    elif "weather" in code_str.lower():
-                        self.office_map.gemini.target_x_pct = 0.80
-                        self.office_map.gemini.target_y_pct = 0.75
-                        self.office_map.gemini.status = "tool"
-                        self.office_map.gemini.dialogue = "Executing external API Fetch via WASM Sandbox!"
-                        self.office_map.claude.target_x_pct = 0.20
-                        self.office_map.claude.target_y_pct = 0.25
-                        self.office_map.claude.status = "idle"
-                        self.office_map.claude.dialogue = "Waiting for data vectorization."
-                        self.office_map.draw_collab_line = False
-                    else:
-                        self.office_map.claude.target_x_pct = 0.45
-                        self.office_map.claude.target_y_pct = 0.50
-                        self.office_map.claude.status = "speaking"
-                        self.office_map.claude.dialogue = "Analyzing intent AST signature..."
-                        self.office_map.gemini.target_x_pct = 0.55
-                        self.office_map.gemini.target_y_pct = 0.50
-                        self.office_map.gemini.status = "speaking"
-                        self.office_map.gemini.dialogue = "Vectorizing outcome into Hyperbolic space..."
-                        self.office_map.draw_collab_line = True
-                        
-                    # Request map redraw
                     self.office_map.refresh()
                 else:
-                    # Slowly regenerate fuel if idle to keep progress bars active
-                    if tokyo_bar.progress < 10000:
-                        tokyo_bar.advance(random.randint(10, 50))
-                    if london_bar.progress < 10000:
-                        london_bar.advance(random.randint(10, 50))
-                    
-                    # Revert dialog and return agents to center if idle
                     if random.random() > 0.8:
-                        self.office_map.claude.target_x_pct = 0.20
-                        self.office_map.claude.target_y_pct = 0.25
-                        self.office_map.claude.status = "idle"
-                        self.office_map.claude.dialogue = "Awaiting intent..."
-                        
-                        self.office_map.gemini.target_x_pct = 0.80
-                        self.office_map.gemini.target_y_pct = 0.75
-                        self.office_map.gemini.status = "idle"
-                        self.office_map.gemini.dialogue = "Awaiting intent..."
-                        self.office_map.draw_collab_line = False
-                        
+                        c = self.office_map.agents["Claude"]
+                        g = self.office_map.agents["Gemini"]
+                        c.target_x, c.target_y = 6, 3
+                        g.target_x, g.target_y = max(10, self.office_map.size.width - 8), 3
+                        c.status, g.status = "idle", "idle"
+                        c.dialogue, g.dialogue = "Awaiting...", "Awaiting..."
+                        self.office_map.collab_lines = []
                         self.office_map.refresh()
-
             except Exception as e:
-                self.event_stream.write(f"[Error] Telemetry sync failed: {e}")
+                self.event_stream.write(f"Error: {e}")
                 await asyncio.sleep(2)
 
 if __name__ == "__main__":
-    app = AgentOSTelemetryApp()
+    app = DashboardApp()
     app.run()
