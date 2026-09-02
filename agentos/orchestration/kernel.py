@@ -10,7 +10,6 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspa
 
 from agentos.core.broker import IPCBroker
 from agentos.network.mesh import WebRTCMeshRouter
-from agentos.gateway.mcp_server import MCPGateway
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] Kernel: %(message)s')
 logger = logging.getLogger("AgentOS_Kernel")
@@ -76,9 +75,6 @@ async def boot_sequence():
     # 3. Spin up the WebRTC Mesh Router
     mesh_router = WebRTCMeshRouter(node_id="PrimeNode-01", swarm_id="alpha-squad")
     asyncio.create_task(mesh_router.start())
-    
-    # 4. Spin up the MCP Gateway (Ready for external LLM connection)
-    gateway = MCPGateway()
     
     logger.info("===================================================")
     logger.info(" AgentOS Kernel is ONLINE and fully Operational.   ")
