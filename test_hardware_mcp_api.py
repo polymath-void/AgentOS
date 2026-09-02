@@ -25,11 +25,13 @@ def run():
     except Exception as e:
         sys_data['os'] = str(e)
         
-    # 2. Battery Info via Termux API
+    # 2. Native Battery Info (Bypassing termux-api via Android System Props)
     try:
-        battery_out = subprocess.check_output(['termux-battery-status']).decode('utf-8')
-        battery = json.loads(battery_out)
-        sys_data['battery'] = f"{battery.get('percentage')}% ({battery.get('status')}) | Temp: {battery.get('temperature')}°C | Health: {battery.get('health')}"
+        ui_battery = subprocess.check_output(['getprop', 'sys.UiBatteryLevel']).decode('utf-8').strip()
+        if ui_battery:
+            sys_data['battery'] = f"{ui_battery}% (Extracted via Native sys.UiBatteryLevel property)"
+        else:
+            sys_data['battery'] = "Unavailable (No native properties found)"
     except Exception as e:
         sys_data['battery'] = f"Unavailable: {e}"
         
