@@ -13,72 +13,111 @@ except ImportError:
     print("Please install it by running: pip install textual rich")
     sys.exit(1)
 
-CLAUDE_ART = """\
-   _____
-  / o o \\
-  \\  _  /
-   /|||\\
-  //|||\\\\
- // ||| \\\\"""
 
-GEMINI_ART = """\
-   .---.
-  / * * \\
-  |  -  |
-   \\___/
-   /|||\\
-  //|||\\\\
- // ||| \\\\"""
-
-
-class AgentNodeWidget(Static):
-    """A personalized RPG-style widget representing an active AI Agent."""
-    
-    dialogue = reactive("Awaiting intent...")
-
-    def __init__(self, agent_name: str, color: str, ascii_art: str, **kwargs):
-        super().__init__(**kwargs)
-        self.agent_name = agent_name
+class Agent:
+    def __init__(self, name: str, symbol: str, color: str, x: float, y: float):
+        self.name = name
+        self.symbol = symbol
         self.color = color
-        self.ascii_art = ascii_art
+        self.x = x
+        self.y = y
+        self.target_x = x
+        self.target_y = y
+        self.dialogue = "Awaiting intent..."
+
+    def move(self, speed: float) -> bool:
+        dx = self.target_x - self.x
+        dy = self.target_y - self.y
+        dist = (dx**2 + dy**2)**0.5
+        if dist > 0.1:
+            self.x += (dx / dist) * speed
+            self.y += (dy / dist) * speed
+            return True
+        return False
+
+
+class OfficeMap(Static):
+    """A 2D Top-Down Virtual Office Map using Rich Text."""
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.grid_width = 80
+        self.grid_height = 20
+        
+        # Initialize agents
+        self.claude = Agent("Claude (Architect)", "C", "red", 40, 10)
+        self.gemini = Agent("Gemini (Memory Vectorizer)", "G", "blue", 42, 10)
+        self.agents_list = [self.claude, self.gemini]
+        
+        # Start movement loop (60fps target -> ~0.016s)
+        self.update_timer = self.set_interval(1 / 60, self.tick)
+
+    def tick(self) -> None:
+        changed = False
+        speed = 0.3  # Agent movement speed
+        
+        for agent in self.agents_list:
+            if agent.move(speed):
+                changed = True
+                
+        if changed:
+            self.refresh(layout=True)
 
     def render(self) -> str:
-        # A sleek, dynamically resizing RPG-styled text box in the head
-        max_width = 38
+        # Build base grid
+        grid = [['[grey37]·[/grey37]' for _ in range(self.grid_width)] for _ in range(self.grid_height)]
         
-        # Word wrap the text if it's too long
-        words = self.dialogue.split(" ")
-        lines = []
-        current_line = ""
-        for word in words:
-            if len(current_line) + len(word) + 1 <= max_width:
-                current_line += (word + " ")
-            else:
-                lines.append(current_line.strip())
-                current_line = word + " "
-        if current_line:
-            lines.append(current_line.strip())
+        # Draw Walls
+        for x in range(self.grid_width):
+            grid[0][x] = '[bright_black]█[/bright_black]'
+            grid[self.grid_height-1][x] = '[bright_black]█[/bright_black]'
+        for y in range(self.grid_height):
+            grid[y][0] = '[bright_black]█[/bright_black]'
+            grid[y][self.grid_width-1] = '[bright_black]█[/bright_black]'
             
-        longest_line = max(len(line) for line in lines) if lines else 0
-        
-        # Build the dynamic box
-        box = f"╭{'─' * (longest_line + 2)}╮\n"
-        for line in lines:
-            padded_line = line.ljust(longest_line)
-            box += f"│ {padded_line} │\n"
-        box += f"╰{'─' * (longest_line + 2)}╯"
-        
-        # The speech bubble pointer
-        bubble = "      \\\n       \\_"
-        art_colored = f"[{self.color}]{self.ascii_art}[/{self.color}]"
-        
-        return f"[bold {self.color}]{self.agent_name}[/bold {self.color}]\n\n{box}\n{bubble}\n{art_colored}"
+        # Draw Claude's Desk
+        for dx in range(15, 20):
+            grid[5][dx] = '[yellow]▄[/yellow]'
+            
+        # Draw Gemini's Desk
+        for dx in range(60, 65):
+            grid[15][dx] = '[yellow]▄[/yellow]'
+
+        # Draw Server Rack / Datacenter
+        for dy in range(2, 6):
+            grid[dy][75] = '[cyan]█[/cyan]'
+            grid[dy][76] = '[cyan]█[/cyan]'
+
+        # Overlay Agents
+        dialogues = []
+        for agent in self.agents_list:
+            ax = int(round(agent.x))
+            ay = int(round(agent.y))
+            # Keep within bounds
+            ax = max(1, min(self.grid_width - 2, ax))
+            ay = max(1, min(self.grid_height - 2, ay))
+            
+            grid[ay][ax] = f"[bold {agent.color}]{agent.symbol}[/bold {agent.color}]"
+            
+            if agent.dialogue:
+                dialogues.append(f"[{agent.color}]{agent.name}[/{agent.color}]: {agent.dialogue}")
+
+        # Render rows
+        lines = []
+        for y in range(self.grid_height):
+            lines.append("".join(grid[y]))
+            
+        map_str = "\n".join(lines)
+        if dialogues:
+            map_str += "\n\n" + "\n".join(dialogues)
+            
+        return map_str
 
 
 class AgentOSTelemetryApp(App):
     """
     The AgentOS Swarm Dashboard.
-    Visualizes WASM fuel, ZeroMQ active connections, and dynamic RPG-style intents.
+    Visualizes WASM fuel, ZeroMQ active connections, and dynamic Virtual Office Map.
     """
     CSS = """
     Screen {
@@ -111,16 +150,9 @@ class AgentOSTelemetryApp(App):
     }
     
     #office_floor {
-        layout: horizontal;
         height: 1fr;
         align: center middle;
-    }
-    
-    .agent_desk {
-        width: 45%;
-        height: 100%;
-        content-align: center middle;
-        padding: 2;
+        padding: 1;
     }
     
     #event_stream {
@@ -144,12 +176,10 @@ class AgentOSTelemetryApp(App):
                 yield Static("London-Edge: ", classes="fuel_label")
                 yield ProgressBar(total=10000, id="london_fuel", show_eta=False)
 
-        # Main View: Open Office
-        with Horizontal(id="office_floor"):
-            self.claude_node = AgentNodeWidget("Claude (Architect)", "green", CLAUDE_ART, classes="agent_desk")
-            self.gemini_node = AgentNodeWidget("Gemini (Memory Vectorizer)", "cyan", GEMINI_ART, classes="agent_desk")
-            yield self.claude_node
-            yield self.gemini_node
+        # Main View: Open Office Map
+        with Vertical(id="office_floor"):
+            self.office_map = OfficeMap()
+            yield self.office_map
 
         # Bottom Panel: Log Stream
         self.event_stream = Log(id="event_stream", highlight=True)
@@ -163,7 +193,7 @@ class AgentOSTelemetryApp(App):
         tokyo_bar.advance(8500)
         london_bar.advance(7200)
         
-        self.event_stream.write("[System] AgentOS TUI Initialized. Office Layout Loaded.")
+        self.event_stream.write("[System] AgentOS TUI Initialized. 2D Virtual Office Layout Loaded.")
         self.event_stream.write("[Mesh] ZeroMQ ROUTER bound to tcp://0.0.0.0:5557")
         self.event_stream.write("[WebRTC] STUN Resolution successful. P2P Tunnels Open.")
         
@@ -209,17 +239,32 @@ class AgentOSTelemetryApp(App):
                     else:
                         london_bar.progress = 0
                     
-                    # Update dialog
+                    # Process Intent & Move Agents
                     code_str = intent.get("code", "")
                     if "summit" in code_str.lower() or "claude" in code_str.lower():
-                        self.claude_node.dialogue = "Processing remote Summit Payload via WebRTC!"
-                        self.gemini_node.dialogue = "Monitoring background channels."
+                        self.office_map.claude.target_x = 17
+                        self.office_map.claude.target_y = 6
+                        self.office_map.claude.dialogue = "Processing remote Summit Payload via WebRTC!"
+                        self.office_map.gemini.target_x = 42
+                        self.office_map.gemini.target_y = 10
+                        self.office_map.gemini.dialogue = "Monitoring background channels."
                     elif "weather" in code_str.lower():
-                        self.gemini_node.dialogue = "Executing external API Fetch via WASM Sandbox!"
-                        self.claude_node.dialogue = "Waiting for data vectorization."
+                        self.office_map.gemini.target_x = 62
+                        self.office_map.gemini.target_y = 14
+                        self.office_map.gemini.dialogue = "Executing external API Fetch via WASM Sandbox!"
+                        self.office_map.claude.target_x = 40
+                        self.office_map.claude.target_y = 10
+                        self.office_map.claude.dialogue = "Waiting for data vectorization."
                     else:
-                        self.claude_node.dialogue = "Analyzing intent AST signature..."
-                        self.gemini_node.dialogue = "Vectorizing outcome into Hyperbolic space..."
+                        self.office_map.claude.target_x = 17
+                        self.office_map.claude.target_y = 6
+                        self.office_map.claude.dialogue = "Analyzing intent AST signature..."
+                        self.office_map.gemini.target_x = 62
+                        self.office_map.gemini.target_y = 14
+                        self.office_map.gemini.dialogue = "Vectorizing outcome into Hyperbolic space..."
+                        
+                    # Request map redraw
+                    self.office_map.refresh()
                 else:
                     # Slowly regenerate fuel if idle to keep progress bars active
                     if tokyo_bar.progress < 10000:
@@ -227,10 +272,17 @@ class AgentOSTelemetryApp(App):
                     if london_bar.progress < 10000:
                         london_bar.advance(random.randint(10, 50))
                     
-                    # Revert dialog if no events for a while
+                    # Revert dialog and return agents to center if idle
                     if random.random() > 0.8:
-                        self.claude_node.dialogue = "Awaiting intent..."
-                        self.gemini_node.dialogue = "Awaiting intent..."
+                        self.office_map.claude.target_x = 40
+                        self.office_map.claude.target_y = 10
+                        self.office_map.claude.dialogue = "Awaiting intent..."
+                        
+                        self.office_map.gemini.target_x = 42
+                        self.office_map.gemini.target_y = 10
+                        self.office_map.gemini.dialogue = "Awaiting intent..."
+                        
+                        self.office_map.refresh()
 
             except Exception as e:
                 self.event_stream.write(f"[Error] Telemetry sync failed: {e}")
