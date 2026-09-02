@@ -18,7 +18,7 @@ COPY pyproject.toml .
 RUN pip install .
 
 # Copy the AgentOS ecosystem files
-COPY src/ ./src/
+COPY agentos/ ./agentos/
 COPY tests/ ./tests/
 
 # Expose ports for WebRTC (UDP) and ZeroMQ (TCP) if not using host networking
@@ -26,4 +26,4 @@ EXPOSE 5555/tcp 5556/tcp 5557/tcp 5558/tcp 8765/tcp
 EXPOSE 20000-20100/udp
 
 # Execution Command
-CMD ["python", "src/orchestration/kernel.py"]
+CMD ["python", "agentos/orchestration/kernel.py"]

@@ -15,4 +15,8 @@ dependencies = [
 ]
 
 [project.scripts]
-agentos = "src.orchestration.kernel:main"
+agentos = "agentos.orchestration.kernel:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["agentos*"]

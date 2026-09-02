@@ -8,9 +8,9 @@ import zmq.asyncio
 # Ensure project root is in PYTHONPATH
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from src.core.broker import IPCBroker
-from src.network.mesh import WebRTCMeshRouter
-from src.gateway.mcp_server import MCPGateway
+from agentos.core.broker import IPCBroker
+from agentos.network.mesh import WebRTCMeshRouter
+from agentos.gateway.mcp_server import MCPGateway
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] Kernel: %(message)s')
 logger = logging.getLogger("AgentOS_Kernel")

@@ -14,9 +14,9 @@ import sys
 import os
 
 # Inject AgentOS src into path to import IPC Bus
-sys.path.insert(0, '/data/data/com.termux/files/home/Projects/AgentOS/src')
+sys.path.insert(0, '/data/data/com.termux/files/home/Projects/AgentOS/agentos')
 try:
-    from orchestration.ipc_bus import IPCBus
+    from agentos.orchestration.ipc_bus import IPCBus
 except ImportError:
     IPCBus = None
 
