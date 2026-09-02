@@ -1,29 +1,61 @@
 import asyncio
 import sys
+import random
+import json
 
 try:
     from textual.app import App, ComposeResult
-    from textual.containers import Grid, Horizontal, Vertical
-    from textual.widgets import Header, Footer, Static, Log, ProgressBar
+    from textual.containers import Horizontal, Vertical
+    from textual.widgets import Static, Log, ProgressBar
     from textual.reactive import reactive
 except ImportError:
     print("AgentOS Visual Telemetry requires the 'textual' framework.")
     print("Please install it by running: pip install textual rich")
     sys.exit(1)
 
+CLAUDE_ART = """\
+   _____
+  / o o \\
+  \\  _  /
+   /|||\\
+  //|||\\\\
+ // ||| \\\\"""
+
+GEMINI_ART = """\
+   .---.
+  / * * \\
+  |  -  |
+   \\___/
+   /|||\\
+  //|||\\\\
+ // ||| \\\\"""
+
+
 class AgentNodeWidget(Static):
     """A personalized RPG-style widget representing an active AI Agent."""
     
     dialogue = reactive("Awaiting intent...")
 
-    def __init__(self, agent_name: str, color: str, **kwargs):
+    def __init__(self, agent_name: str, color: str, ascii_art: str, **kwargs):
         super().__init__(**kwargs)
         self.agent_name = agent_name
         self.color = color
+        self.ascii_art = ascii_art
 
     def render(self) -> str:
-        # A sleek, RPG-styled text box rendered purely via Textual/Rich
-        return f"[{self.color} bold]<{self.agent_name}>[/{self.color} bold]\n[white]{self.dialogue}[/white]"
+        # A sleek, RPG-styled text box in the head
+        box_width = 42
+        padded_text = self.dialogue.ljust(box_width)
+        # Ensure we truncate if too long
+        if len(padded_text) > box_width:
+            padded_text = padded_text[:box_width - 3] + "..."
+            
+        box = f"╭{'─' * (box_width+2)}╮\n│ {padded_text} │\n╰{'─' * (box_width+2)}╯"
+        bubble = "      \\\n       \\_"
+        art_colored = f"[{self.color}]{self.ascii_art}[/{self.color}]"
+        
+        return f"[bold {self.color}]{self.agent_name}[/bold {self.color}]\n\n{box}\n{bubble}\n{art_colored}"
+
 
 class AgentOSTelemetryApp(App):
     """
@@ -32,67 +64,88 @@ class AgentOSTelemetryApp(App):
     """
     CSS = """
     Screen {
-        layout: grid;
-        grid-size: 2 4;
-        grid-rows: 3 3 1fr 10;
-        grid-columns: 1fr 1fr;
-    }
-    
-    #top_panel {
-        column-span: 2;
-        padding: 1;
-        background: $boost;
-        border-bottom: heavy $accent;
-        content-align: center middle;
-    }
-    
-    #fuel_panel {
-        column-span: 2;
-        padding: 1;
-    }
-    
-    .agent_box {
-        border: round $primary;
-        padding: 1;
-        height: 100%;
+        layout: vertical;
         background: $surface;
     }
     
+    #header {
+        height: 3;
+        content-align: center middle;
+        background: $boost;
+        border-bottom: heavy $accent;
+    }
+    
+    #fuel_station {
+        height: auto;
+        padding: 1 2;
+        border-bottom: dashed $secondary;
+        background: $panel;
+    }
+    
+    .fuel_row {
+        height: 1;
+        margin-bottom: 1;
+    }
+    
+    .fuel_label {
+        width: 20;
+        content-align: right middle;
+    }
+    
+    #office_floor {
+        layout: horizontal;
+        height: 1fr;
+        align: center middle;
+    }
+    
+    .agent_desk {
+        width: 45%;
+        height: 100%;
+        content-align: center middle;
+        padding: 2;
+    }
+    
     #event_stream {
-        column-span: 2;
-        border-top: dashed $secondary;
+        height: 10;
+        border-top: solid $primary;
         background: $panel;
     }
     """
 
     def compose(self) -> ComposeResult:
-        # 1. Top Panel: Global Mesh Status
-        yield Static("[bold cyan]AgentOS Global Mesh Status[/bold cyan] | Active Nodes: 4 | Global WASM Fuel: 85,400", id="top_panel")
+        # Top Header
+        yield Static("[bold cyan]AgentOS Headquarters - Virtual Office Interface[/bold cyan] | Active Nodes: 4", id="header")
         
-        # 2. Sub-Top Panel: Fuel Diagnostics
-        with Horizontal(id="fuel_panel"):
-            yield Static("Tokyo-Prime Fuel: ")
-            yield ProgressBar(total=10000, show_eta=False, id="tokyo_fuel")
-            yield Static("  London-Edge Fuel: ")
-            yield ProgressBar(total=10000, show_eta=False, id="london_fuel")
+        # Fuel Diagnostics
+        with Vertical(id="fuel_station"):
+            yield Static("⚡ [bold yellow]WASM Sandbox Fuel Capacity[/] ⚡")
+            with Horizontal(classes="fuel_row"):
+                yield Static("Tokyo-Prime: ", classes="fuel_label")
+                yield ProgressBar(total=10000, id="tokyo_fuel", show_eta=False)
+            with Horizontal(classes="fuel_row"):
+                yield Static("London-Edge: ", classes="fuel_label")
+                yield ProgressBar(total=10000, id="london_fuel", show_eta=False)
 
-        # 3. Main View: RPG Nodes (Claude and Gemini active)
-        self.claude_node = AgentNodeWidget("Claude (Architect)", "green", classes="agent_box")
-        self.gemini_node = AgentNodeWidget("Gemini (Memory Vectorizer)", "cyan", classes="agent_box")
-        
-        yield self.claude_node
-        yield self.gemini_node
+        # Main View: Open Office
+        with Horizontal(id="office_floor"):
+            self.claude_node = AgentNodeWidget("Claude (Architect)", "green", CLAUDE_ART, classes="agent_desk")
+            self.gemini_node = AgentNodeWidget("Gemini (Memory Vectorizer)", "cyan", GEMINI_ART, classes="agent_desk")
+            yield self.claude_node
+            yield self.gemini_node
 
-        # 4. Bottom Panel: Hyperbolic Event Stream
+        # Bottom Panel: Log Stream
         self.event_stream = Log(id="event_stream", highlight=True)
         yield self.event_stream
 
     async def on_mount(self) -> None:
         """Starts the background telemetry fetchers upon mounting the UI."""
-        self.query_one("#tokyo_fuel").advance(8500)
-        self.query_one("#london_fuel").advance(4200)
+        tokyo_bar = self.query_one("#tokyo_fuel", ProgressBar)
+        london_bar = self.query_one("#london_fuel", ProgressBar)
         
-        self.event_stream.write("[System] AgentOS TUI Initialized.")
+        tokyo_bar.advance(8500)
+        london_bar.advance(7200)
+        
+        self.event_stream.write("[System] AgentOS TUI Initialized. Office Layout Loaded.")
         self.event_stream.write("[Mesh] ZeroMQ ROUTER bound to tcp://0.0.0.0:5557")
         self.event_stream.write("[WebRTC] STUN Resolution successful. P2P Tunnels Open.")
         
@@ -103,7 +156,6 @@ class AgentOSTelemetryApp(App):
         """Listens asynchronously to the AgentOS Kernel PUB socket."""
         import zmq
         import zmq.asyncio
-        import json
         
         context = zmq.asyncio.Context()
         socket = context.socket(zmq.SUB)
@@ -112,31 +164,56 @@ class AgentOSTelemetryApp(App):
         
         self.event_stream.write("[Telemetry] Subscribed to real-time intent stream on tcp://127.0.0.1:5562")
         
+        tokyo_bar = self.query_one("#tokyo_fuel", ProgressBar)
+        london_bar = self.query_one("#london_fuel", ProgressBar)
+        
         while True:
             try:
-                message = await socket.recv_string()
-                # Message format: "TELEMETRY {"code": "...", "args": {}}"
-                payload_str = message.replace("TELEMETRY ", "", 1)
-                intent = json.loads(payload_str)
-                
-                # We received a real intent!
-                self.event_stream.write(f"[Intent-Intercept] Received payload: {str(intent)[:100]}...")
-                
-                # Fluctuate fuel as a visual effect of processing
-                import random
-                tokyo = self.query_one("#tokyo_fuel")
-                if tokyo.progress > 100: tokyo.advance(-random.randint(50, 500))
-                
-                # Update RPG Dialogue conditionally if we see key words in code
-                code_str = intent.get("code", "")
-                if "summit" in code_str.lower() or "claude" in code_str.lower():
-                    self.claude_node.dialogue = "Processing remote Summit Payload via WebRTC DataChannel!"
-                elif "weather" in code_str.lower():
-                    self.gemini_node.dialogue = "Executing external API Fetch intent via WASM Sandbox!"
-                else:
-                    self.claude_node.dialogue = "Analyzing intent AST signature..."
-                    self.gemini_node.dialogue = "Vectorizing outcome into Hyperbolic space..."
+                events = await socket.poll(timeout=1000)
+                if events:
+                    message = await socket.recv_string()
+                    payload_str = message.replace("TELEMETRY ", "", 1)
+                    intent = json.loads(payload_str)
                     
+                    self.event_stream.write(f"[Intent-Intercept] Payload: {str(intent)[:80]}...")
+                    
+                    # Visually consume fuel
+                    tokyo_consume = random.randint(100, 1000)
+                    london_consume = random.randint(100, 1000)
+                    
+                    if tokyo_bar.progress > tokyo_consume:
+                        tokyo_bar.advance(-tokyo_consume)
+                    else:
+                        tokyo_bar.progress = 0
+                        
+                    if london_bar.progress > london_consume:
+                        london_bar.advance(-london_consume)
+                    else:
+                        london_bar.progress = 0
+                    
+                    # Update dialog
+                    code_str = intent.get("code", "")
+                    if "summit" in code_str.lower() or "claude" in code_str.lower():
+                        self.claude_node.dialogue = "Processing remote Summit Payload via WebRTC!"
+                        self.gemini_node.dialogue = "Monitoring background channels."
+                    elif "weather" in code_str.lower():
+                        self.gemini_node.dialogue = "Executing external API Fetch via WASM Sandbox!"
+                        self.claude_node.dialogue = "Waiting for data vectorization."
+                    else:
+                        self.claude_node.dialogue = "Analyzing intent AST signature..."
+                        self.gemini_node.dialogue = "Vectorizing outcome into Hyperbolic space..."
+                else:
+                    # Slowly regenerate fuel if idle to keep progress bars active
+                    if tokyo_bar.progress < 10000:
+                        tokyo_bar.advance(random.randint(10, 50))
+                    if london_bar.progress < 10000:
+                        london_bar.advance(random.randint(10, 50))
+                    
+                    # Revert dialog if no events for a while
+                    if random.random() > 0.8:
+                        self.claude_node.dialogue = "Awaiting intent..."
+                        self.gemini_node.dialogue = "Awaiting intent..."
+
             except Exception as e:
                 self.event_stream.write(f"[Error] Telemetry sync failed: {e}")
                 await asyncio.sleep(2)
