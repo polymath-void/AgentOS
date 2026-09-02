@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agentos"
+version = "1.0.0"
+description = "AgentOS High-Performance Swarm Ecosystem"
+requires-python = ">=3.10"
+dependencies = [
+    "aiortc>=1.6.0",
+    "wasmtime>=16.0.0",
+    "websockets",
+    "pyzmq"
+]
+
+[project.scripts]
+agentos = "src.orchestration.kernel:main"

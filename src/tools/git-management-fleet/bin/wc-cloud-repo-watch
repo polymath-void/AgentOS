@@ -1,0 +1,56 @@
+#!/usr/bin/env python3
+import argparse
+import json
+import logging
+import time
+from pathlib import Path
+
+# Add src to python path for direct execution
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
+
+from cloud_poller import poll_fleet
+from cascade_engine import trigger_cascade
+from auto_reconcile import reconcile_repo
+from self_heal import heal_repo
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
+logger = logging.getLogger("wc-cloud-repo-watch")
+
+def main():
+    parser = argparse.ArgumentParser(description="Cloud Git Repository Fleet Management")
+    parser.add_argument("--fleet", type=str, default=os.path.expanduser("~/repo_fleet.json"))
+    parser.add_argument("--watch", action="store_true")
+    parser.add_argument("--interval", type=int, default=60)
+    parser.add_argument("--heal", type=str, help="Repo to heal")
+    
+    args = parser.parse_args()
+    
+    fleet_path = Path(args.fleet)
+    if not fleet_path.exists():
+        logger.error(f"Fleet file {args.fleet} not found.")
+        return
+        
+    fleet_data = json.loads(fleet_path.read_text())
+    
+    if args.heal:
+        # Quick lookup for URL in fleet data
+        url = fleet_data.get("repositories", {}).get(args.heal, {}).get("url", "")
+        heal_repo(args.heal, url)
+        return
+        
+    if args.watch:
+        logger.info(f"Watching fleet with {args.interval}s interval...")
+        known_shas = {}
+        while True:
+            changes = poll_fleet(fleet_data, known_shas)
+            for repo, sha in changes.items():
+                logger.info(f"Change detected in {repo}! Triggering reconciliation and cascade.")
+                url = fleet_data.get("repositories", {}).get(repo, {}).get("url", "")
+                reconcile_repo(repo, url)
+                trigger_cascade(repo, sha)
+            time.sleep(args.interval)
+
+if __name__ == "__main__":
+    main()

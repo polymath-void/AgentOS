@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Termux Claw Sentinel Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="background-glow"></div>
+  
+  <div class="dashboard-container">
+    <!-- Header -->
+    <header class="header-card">
+      <div class="brand">
+        <div class="logo-icon">🦀</div>
+        <div>
+          <h1>Claw Sentinel Dashboard</h1>
+          <p class="subtitle">Real-time Telemetry & OpenClaw AI Gateway</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <span class="status-pill online" id="overallStatus">
+          <span class="pulse-dot"></span> System Operational
+        </span>
+        <button class="refresh-btn" id="refreshBtn" onclick="fetchTelemetry()">⚡ Refresh</button>
+      </div>
+    </header>
+
+    <!-- Main Grid -->
+    <div class="grid-layout">
+      <!-- Battery Telemetry Card -->
+      <div class="card glass-card">
+        <div class="card-header">
+          <h3>🔋 Battery & Power</h3>
+          <span class="badge" id="batteryPlugged">UNPLUGGED</span>
+        </div>
+        <div class="card-body gauge-body">
+          <div class="gauge-wrapper">
+            <svg class="gauge-svg" viewBox="0 0 120 120">
+              <circle class="gauge-bg" cx="60" cy="60" r="50"></circle>
+              <circle class="gauge-fill" id="batteryGauge" cx="60" cy="60" r="50" stroke-dasharray="314" stroke-dashoffset="314"></circle>
+            </svg>
+            <div class="gauge-text">
+              <span class="gauge-value" id="batteryPct">0%</span>
+              <span class="gauge-label" id="batteryStatus">DISCHARGING</span>
+            </div>
+          </div>
+          <div class="metrics-row">
+            <div class="metric">
+              <span class="label">Temperature</span>
+              <span class="value" id="batteryTemp">0.0°C</span>
+            </div>
+            <div class="metric">
+              <span class="label">Health</span>
+              <span class="value" id="batteryHealth">GOOD</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- OpenClaw Gateway Telemetry Card -->
+      <div class="card glass-card">
+        <div class="card-header">
+          <h3>🤖 OpenClaw Gateway</h3>
+          <span class="badge online" id="gwBadge">ONLINE</span>
+        </div>
+        <div class="card-body">
+          <div class="gateway-status-box">
+            <div class="gw-icon">⚡</div>
+            <div class="gw-details">
+              <div class="gw-url" id="gwUrl">http://127.0.0.1:18789/</div>
+              <div class="gw-model" id="gwModel">Model: google/gemini-3.5-flash</div>
+            </div>
+          </div>
+          <div class="system-meta">
+            <div class="meta-item">
+              <span class="meta-label">Device</span>
+              <span class="meta-val" id="deviceModel">Nothing Phone (2a)</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">OS Kernel</span>
+              <span class="meta-val" id="deviceOs">Android 16 (Termux)</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Architecture</span>
+              <span class="meta-val" id="deviceArch">aarch64</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI Clipboard Assistant Card -->
+      <div class="card glass-card full-width">
+        <div class="card-header">
+          <h3>📋 ClawClip AI Processor</h3>
+          <span class="badge info">Interactive AI</span>
+        </div>
+        <div class="card-body">
+          <div class="clip-input-group">
+            <textarea id="clipText" placeholder="Paste or type text here (or click Fetch Android Clipboard)..."></textarea>
+            <div class="clip-actions">
+              <button class="action-btn secondary" onclick="fetchClipboard()">📥 Fetch Android Clipboard</button>
+              <button class="action-btn primary" id="processBtn" onclick="processAIClip()">✨ Process with Claw 🦀</button>
+            </div>
+          </div>
+
+          <div class="clip-output-group hidden" id="clipOutputWrapper">
+            <div class="output-header">
+              <span>AI Response Result</span>
+              <button class="copy-btn" onclick="copyResult()">📋 Copy to Clipboard</button>
+            </div>
+            <div class="output-content" id="clipResult"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Sentinel System Event Stream -->
+      <div class="card glass-card full-width">
+        <div class="card-header">
+          <h3>🛡️ Live Sentinel Event Stream</h3>
+          <span class="badge" id="eventCount">0 Events</span>
+        </div>
+        <div class="card-body">
+          <div class="event-stream" id="eventStream">
+            <div class="event-item info">
+              <span class="event-time" id="initTime">--:--:--</span>
+              <span class="event-msg">Sentinel Dashboard connected to local Termux telemetry stream.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast">Toast Message</div>
+  <script src="app.js"></script>
+</body>
+</html>

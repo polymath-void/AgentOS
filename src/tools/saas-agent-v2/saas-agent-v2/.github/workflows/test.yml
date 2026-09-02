@@ -1,0 +1,48 @@
+name: CI/CD Test
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-asyncio
+    
+    - name: Syntax check
+      run: |
+        python -m py_compile models.py
+        python -m py_compile tool_registry.py
+        python -m py_compile tool_executor.py
+        python -m py_compile card_store.py
+        python -m py_compile intent_router.py
+        python -m py_compile gemini_engine.py
+        python -m py_compile main.py
+    
+    - name: Import test
+      run: |
+        python -c "from models import AgentCard, TaskRequest, AgentResponse; print('✓ models')"
+        python -c "from tool_registry import get_tool_definitions; print(f'✓ tool_registry ({len(get_tool_definitions())} tools)')"
+        python -c "from card_store import PRESEEDED_CARDS; print(f'✓ card_store ({len(PRESEEDED_CARDS)} cards)')"
+        python -c "from intent_router import classify_intent; print('✓ intent_router')"
+    
+    - name: Linting
+      run: |
+        pip install flake8
+        flake8 *.py --count --select=E9,F63,F7,F82 --show-source --statistics --max-line-length=120
+      continue-on-error: true

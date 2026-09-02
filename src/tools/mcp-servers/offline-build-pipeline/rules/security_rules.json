@@ -1,0 +1,8 @@
+{
+  "blocked_patterns": [
+    "DROP TABLE",
+    "rm -rf /",
+    "eval(",
+    "os.system("
+  ]
+}

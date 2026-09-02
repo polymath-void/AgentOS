@@ -1,0 +1,18 @@
+{
+    "git add .": {
+        "git commit": 2
+    },
+    "git commit": {
+        "git push origin main": 2
+    },
+    "git push origin main": {
+        "npm start": 1,
+        "ls -la": 1
+    },
+    "npm start": {
+        "git add .": 1
+    },
+    "ls -la": {
+        "git add .": 1
+    }
+}

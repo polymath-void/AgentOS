@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#1a1a2e">
+    <title>SaaS-Agent v2</title>
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect fill='%231a1a2e' width='32' height='32'/><text x='50%' y='50%' font-size='20' fill='%2300d4ff' text-anchor='middle' dominant-baseline='middle'>🤖</text></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        html, body { height: 100%; font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; overflow: hidden; }
+        body { background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 100%); color: #e0e0e0; display: flex; flex-direction: column; }
+        #app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
+
+        /* HEADER */
+        .header { background: linear-gradient(90deg, #1a1a2e, #16213e); padding: 0.75rem 1rem; border-bottom: 2px solid #00d4ff; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; flex-shrink: 0; }
+        .header h1 { font-size: clamp(1.1rem, 4vw, 1.5rem); background: linear-gradient(90deg, #00d4ff, #00ff88); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; white-space: nowrap; }
+        .header-actions { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+        .btn-header { padding: 0.5rem 0.85rem; background: rgba(0, 212, 255, 0.2); border: 1px solid #00d4ff; color: #00d4ff; border-radius: 6px; cursor: pointer; font-size: 0.85rem; transition: all 0.2s; white-space: nowrap; font-family: inherit; }
+        .btn-header:active { background: rgba(0, 212, 255, 0.5); transform: scale(0.96); }
+        .btn-header.danger { border-color: #ff4444; color: #ff4444; background: rgba(255, 68, 68, 0.1); }
+        .btn-header.danger:active { background: rgba(255, 68, 68, 0.4); }
+        .status { font-size: 0.75rem; padding: 0.4rem 0.7rem; border-radius: 6px; background: rgba(0, 255, 136, 0.1); border-left: 3px solid #00ff88; white-space: nowrap; }
+        .status.warning { background: rgba(255, 200, 0, 0.1); border-left-color: #ffc800; }
+        .user-badge { font-size: 0.75rem; padding: 0.4rem 0.7rem; border-radius: 6px; background: rgba(168, 85, 247, 0.1); border-left: 3px solid #a855f7; color: #c4b5fd; }
+
+        /* TABS */
+        .tabs-section { background: linear-gradient(90deg, #1a1a2e, #16213e); border-bottom: 2px solid #2d2d44; padding: 0.6rem; overflow-x: auto; -webkit-overflow-scrolling: touch; flex-shrink: 0; scrollbar-width: thin; }
+        .tabs-container { display: flex; gap: 0.5rem; min-width: min-content; }
+        .card-tab { padding: 0.6rem 0.9rem; background: rgba(0, 212, 255, 0.05); border: 2px solid #2d2d44; border-radius: 8px; cursor: pointer; white-space: nowrap; transition: all 0.2s; flex-shrink: 0; touch-action: manipulation; }
+        .card-tab:active { transform: scale(0.96); }
+        .card-tab.active { border-color: #00ff88; background: rgba(0, 255, 136, 0.15); box-shadow: 0 0 12px rgba(0, 255, 136, 0.2); }
+        .card-tab-name { font-weight: bold; color: #00d4ff; display: block; font-size: 0.9rem; }
+        .card-tab.active .card-tab-name { color: #00ff88; }
+        .card-tab-desc { font-size: 0.7rem; color: #a0a0a0; display: block; margin-top: 0.15rem; }
+        .create-tab-btn { padding: 0.6rem 1.1rem; background: linear-gradient(135deg, #00ff88, #00cc66); color: #0f0f1e; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; white-space: nowrap; flex-shrink: 0; font-size: 0.9rem; touch-action: manipulation; font-family: inherit; }
+        .create-tab-btn:active { transform: scale(0.96); }
+
+        /* CHAT */
+        .container { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
+        .chat-panel { flex: 1; display: flex; flex-direction: column; background: #0f0f1e; min-height: 0; }
+        .messages { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 1rem; display: flex; flex-direction: column; gap: 0.75rem; scroll-behavior: smooth; }
+        .message { padding: 0.8rem 1rem; border-radius: 12px; max-width: 88%; word-wrap: break-word; white-space: pre-wrap; animation: slideIn 0.25s ease; font-size: 0.95rem; line-height: 1.4; }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        .message.user { align-self: flex-end; background: linear-gradient(135deg, #1e3a5f, #0066cc); border-left: 4px solid #00d4ff; }
+        .message.assistant { align-self: flex-start; background: linear-gradient(135deg, #2d2d44, #1a3a3a); border-left: 4px solid #00ff88; }
+        .message.system { align-self: center; background: rgba(168, 85, 247, 0.15); border: 1px solid rgba(168, 85, 247, 0.3); border-left: none; font-size: 0.85rem; color: #c4b5fd; text-align: center; max-width: 95%; }
+        .message.error { background: linear-gradient(135deg, #5f1a1a, #8b0000); border-left: 4px solid #ff4444; }
+        .spinner { display: inline-block; width: 12px; height: 12px; border: 2px solid rgba(0, 212, 255, 0.3); border-radius: 50%; border-top-color: #00d4ff; animation: spin 0.8s linear infinite; margin-right: 6px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* INPUT */
+        .chat-input { display: flex; gap: 0.6rem; padding: 0.85rem; padding-bottom: max(0.85rem, env(safe-area-inset-bottom)); border-top: 1px solid #2d2d44; background: #1a1a2e; flex-shrink: 0; }
+        .chat-input input { flex: 1; padding: 0.7rem 0.9rem; border: 2px solid #2d2d44; border-radius: 8px; background: #0f0f1e; color: #e0e0e0; font-size: 1rem; min-width: 0; font-family: inherit; }
+        .chat-input input:focus { outline: none; border-color: #00d4ff; box-shadow: 0 0 8px rgba(0, 212, 255, 0.2); }
+        .chat-input button { padding: 0.7rem 1.1rem; background: linear-gradient(135deg, #00d4ff, #0099ff); color: #0f0f1e; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.95rem; flex-shrink: 0; touch-action: manipulation; font-family: inherit; }
+        .chat-input button:active:not(:disabled) { transform: scale(0.96); }
+        .chat-input button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* MODAL */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(5px); padding: 1rem; }
+        .modal.active { display: flex; }
+        .modal-content { background: linear-gradient(135deg, #1a1a2e, #16213e); padding: 1.5rem; border-radius: 12px; width: 100%; max-width: 480px; border: 2px solid #00d4ff; box-shadow: 0 20px 60px rgba(0, 212, 255, 0.3); max-height: 85vh; overflow-y: auto; animation: modalSlide 0.25s ease; }
+        @keyframes modalSlide { from { transform: scale(0.96); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .modal-content h3 { background: linear-gradient(90deg, #00d4ff, #00ff88); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 1.25rem; font-size: 1.2rem; }
+        .form-group { margin-bottom: 1.25rem; }
+        .form-group label { display: block; color: #a0a0a0; font-size: 0.85rem; margin-bottom: 0.4rem; font-weight: 500; }
+        .form-group input, .form-group textarea { width: 100%; padding: 0.7rem 0.9rem; background: #0f0f1e; color: #e0e0e0; border: 2px solid #2d2d44; border-radius: 8px; font-size: 1rem; font-family: inherit; }
+        .form-group input:focus, .form-group textarea:focus { outline: none; border-color: #00d4ff; box-shadow: 0 0 8px rgba(0, 212, 255, 0.2); }
+        .modal-buttons { display: flex; gap: 0.75rem; margin-top: 1.5rem; }
+        .modal-buttons button { flex: 1; padding: 0.75rem; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.95rem; touch-action: manipulation; font-family: inherit; }
+        .modal-buttons button:active:not(:disabled) { transform: scale(0.97); }
+        .btn-primary { background: linear-gradient(135deg, #00d4ff, #0099ff); color: #0f0f1e; }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-secondary { background: #2d2d44; color: #e0e0e0; }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #1a1a2e; }
+        ::-webkit-scrollbar-thumb { background: #2d2d44; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #00d4ff; }
+
+        @media (max-width: 600px) {
+            .header { padding: 0.6rem 0.75rem; }
+            .header h1 { font-size: 1.05rem; }
+            .btn-header { padding: 0.45rem 0.7rem; font-size: 0.8rem; }
+            .status { font-size: 0.7rem; padding: 0.35rem 0.55rem; }
+            .user-badge { font-size: 0.7rem; padding: 0.35rem 0.55rem; }
+            .tabs-section { padding: 0.5rem; }
+            .card-tab { padding: 0.5rem 0.75rem; }
+            .card-tab-name { font-size: 0.82rem; }
+            .card-tab-desc { display: none; }
+            .create-tab-btn { padding: 0.5rem 0.85rem; font-size: 0.82rem; }
+            .messages { padding: 0.75rem; gap: 0.6rem; }
+            .message { max-width: 92%; font-size: 0.92rem; padding: 0.7rem 0.85rem; }
+            .chat-input { padding: 0.6rem; gap: 0.5rem; }
+            .chat-input input { font-size: 0.95rem; padding: 0.65rem 0.8rem; }
+            .chat-input button { padding: 0.65rem 0.9rem; font-size: 0.88rem; }
+            .modal-content { padding: 1.25rem; border-radius: 10px; }
+        }
+        @media (max-width: 380px) {
+            .header h1 { font-size: 0.95rem; }
+            .chat-input button { padding: 0.65rem 0.7rem; font-size: 0.85rem; }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="header">
+            <h1>⚡ SaaS-Agent v2</h1>
+            <div class="header-actions">
+                <div class="user-badge" v-if="user">{{ user.display_name || user.email }}</div>
+                <div class="status" v-if="geminiStatus === 'fallback'" :class="{ warning: true }">⚠️ Fallback model</div>
+                <div class="status" v-if="!hasApiKey" :class="{ warning: true }">⚠️ No API key</div>
+                <button class="btn-header" @click="showSettingsModal = true">⚙️ Settings</button>
+                <button class="btn-header danger" @click="logout">↗ Logout</button>
+            </div>
+        </div>
+
+        <div class="tabs-section">
+            <div class="tabs-container">
+                <div v-for="card in cards" :key="card.id" :class="['card-tab', { active: selectedCardId === card.id }]" @click="selectedCardId = card.id">
+                    <span class="card-tab-name">{{ card.name }}</span>
+                    <span class="card-tab-desc">{{ (card.description || 'No desc').substring(0, 22) }}</span>
+                </div>
+                <button class="create-tab-btn" @click="showCreateModal = true">✨ Create</button>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="chat-panel">
+                <div class="messages" ref="messagesContainer">
+                    <div v-for="msg in messages" :key="msg.id" :class="['message', msg.role, { error: msg.isError }]">
+                        <span v-if="msg.isLoading"><span class="spinner"></span>Processing...</span>
+                        <span v-else>{{ msg.content }}</span>
+                    </div>
+                </div>
+                <div class="chat-input">
+                    <input v-model="task" @keypress.enter="sendTask" placeholder="Tell me what to do..." :disabled="loading" autocomplete="off" autocapitalize="off">
+                    <button @click="sendTask" :disabled="!task.trim() || loading || !hasApiKey">{{ loading ? '...' : 'Send' }}</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Modal (API Key + Model) -->
+        <div :class="['modal', { active: showSettingsModal }]" @click.self="showSettingsModal = false">
+            <div class="modal-content">
+                <h3>⚙️ Settings</h3>
+                <div class="form-group">
+                    <label>Gemini API Key <span style="color:#ff4444;">*</span></label>
+                    <input v-model="apiKeyInput" type="password" placeholder="paste-your-gemini-api-key" autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label>Preferred Model</label>
+                    <input v-model="modelInput" type="text" placeholder="gemini-2.5-flash">
+                </div>
+                <small style="color:#a0a0a0; display:block; margin-bottom:1rem;">
+                    Get key: <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:#00d4ff;">aistudio.google.com/app/apikey</a>
+                    <br>Your key is stored securely on the server, not in your browser.
+                </small>
+                <div v-if="hasApiKey" style="color:#00ff88; font-size:0.85rem; margin-bottom:0.5rem;">✅ API key is configured</div>
+                <div class="form-group" style="margin-top:1rem;">
+                    <label>Account</label>
+                    <div style="color:#a0a0a0; font-size:0.9rem;">{{ user?.email }} · {{ user?.plan }} plan · {{ user?.messages_today || 0 }} messages today</div>
+                </div>
+                <div class="modal-buttons">
+                    <button class="btn-primary" @click="saveApiKey" :disabled="!apiKeyInput.trim()">Save API Key</button>
+                    <button class="btn-secondary" @click="showSettingsModal = false">Close</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Create Card Modal -->
+        <div :class="['modal', { active: showCreateModal }]" @click.self="showCreateModal = false">
+            <div class="modal-content">
+                <h3>✨ Create New Agent Card</h3>
+                <div class="form-group">
+                    <label>Card Name <span style="color:#ff4444;">*</span></label>
+                    <input v-model="newCard.name" placeholder="e.g., WiFi Manager">
+                </div>
+                <div class="form-group">
+                    <label>Description <span style="color:#ff4444;">*</span></label>
+                    <textarea v-model="newCard.description" rows="4" placeholder="What should this agent do?"></textarea>
+                </div>
+                <div class="modal-buttons">
+                    <button class="btn-primary" @click="createCard" :disabled="!newCard.name.trim() || !newCard.description.trim()">Create</button>
+                    <button class="btn-secondary" @click="showCreateModal = false">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+        const API = window.location.origin;
+
+        createApp({
+            data() {
+                return {
+                    messages: [],
+                    cards: [],
+                    task: '',
+                    selectedCardId: null,
+                    loading: false,
+                    showCreateModal: false,
+                    showSettingsModal: false,
+                    newCard: { name: '', description: '' },
+                    apiKeyInput: '',
+                    modelInput: 'gemini-2.5-flash',
+                    geminiStatus: 'ready',
+                    user: null,
+                    hasApiKey: false,
+                    token: localStorage.getItem('token') || '',
+                    msgId: 0,
+                };
+            },
+            mounted() {
+                // Check auth
+                if (!this.token) {
+                    window.location.href = '/';
+                    return;
+                }
+
+                // Register service worker
+                if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
+
+                // Load user profile and cards
+                this.loadProfile();
+                this.loadCards();
+
+                // Re-fit viewport height on mobile keyboard
+                window.addEventListener('resize', this.scrollToBottom);
+            },
+            methods: {
+                authHeaders() {
+                    return {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${this.token}`,
+                    };
+                },
+
+                async loadProfile() {
+                    try {
+                        const res = await fetch(`${API}/auth/me`, { headers: this.authHeaders() });
+                        if (res.status === 401) {
+                            this.logout();
+                            return;
+                        }
+                        const data = await res.json();
+                        this.user = data;
+                        this.hasApiKey = data.has_api_key;
+                        this.modelInput = data.preferred_model || 'gemini-2.5-flash';
+
+                        if (!this.hasApiKey) {
+                            this.addMessage('system', '👋 Welcome! Please set your Gemini API key in Settings to start chatting.');
+                            this.showSettingsModal = true;
+                        } else {
+                            this.addMessage('system', `👋 Welcome back, ${data.display_name || data.email}! Ready to chat.`);
+                        }
+                    } catch (err) {
+                        console.error('Profile load failed:', err);
+                    }
+                },
+
+                async sendTask() {
+                    if (!this.task.trim() || this.loading || !this.hasApiKey) return;
+                    const userMsg = this.task;
+                    this.addMessage('user', userMsg);
+                    this.task = '';
+                    this.loading = true;
+
+                    try {
+                        const response = await fetch(`${API}/chat`, {
+                            method: 'POST',
+                            headers: this.authHeaders(),
+                            body: JSON.stringify({
+                                task: userMsg,
+                                card_id: this.selectedCardId,
+                                local_context: { device: 'web-pwa' },
+                            }),
+                        });
+
+                        if (response.status === 401) {
+                            this.logout();
+                            return;
+                        }
+                        if (response.status === 429) {
+                            const err = await response.json();
+                            this.addMessage('assistant', `⚠️ ${err.detail}`, true);
+                            return;
+                        }
+                        if (response.status === 400) {
+                            const err = await response.json();
+                            this.addMessage('assistant', `⚠️ ${err.detail}`, true);
+                            return;
+                        }
+                        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+                        const data = await response.json();
+                        this.geminiStatus = data.fallback_used ? 'fallback' : 'ready';
+                        this.addMessage('assistant', data.reply);
+
+                        if (data.tool_results?.length) {
+                            const summary = data.tool_results.slice(0, 5).map(r => {
+                                const status = r.result?.status === 'ok' ? '✓' : '✗';
+                                return `${status} ${r.tool}`;
+                            }).join('\n');
+                            this.addMessage('assistant', `🔧 Executed:\n${summary}`);
+                        }
+                    } catch (err) {
+                        this.addMessage('assistant', `❌ Error: ${err.message}`, true);
+                    } finally {
+                        this.loading = false;
+                        this.scrollToBottom();
+                    }
+                },
+
+                async loadCards() {
+                    try {
+                        const response = await fetch(`${API}/cards`, { headers: this.authHeaders() });
+                        if (response.status === 401) { this.logout(); return; }
+                        const data = await response.json();
+                        this.cards = data.cards || [];
+                        if (this.cards.length > 0 && !this.selectedCardId) {
+                            this.selectedCardId = this.cards[0].id;
+                        }
+                    } catch (err) {
+                        console.error('Failed to load cards:', err);
+                    }
+                },
+
+                async createCard() {
+                    if (!this.newCard.name.trim() || !this.newCard.description.trim()) return;
+                    try {
+                        const response = await fetch(`${API}/cards`, {
+                            method: 'POST',
+                            headers: this.authHeaders(),
+                            body: JSON.stringify({
+                                suggested_name: this.newCard.name,
+                                user_description: this.newCard.description,
+                                scope_tags: [],
+                            }),
+                        });
+                        if (response.status === 401) { this.logout(); return; }
+                        if (response.ok) {
+                            this.addMessage('system', `✅ Card "${this.newCard.name}" created!`);
+                            this.newCard = { name: '', description: '' };
+                            this.showCreateModal = false;
+                            await this.loadCards();
+                        } else {
+                            const err = await response.json();
+                            this.addMessage('assistant', `❌ ${err.detail}`, true);
+                        }
+                    } catch (err) {
+                        this.addMessage('assistant', `❌ Error: ${err.message}`, true);
+                    }
+                },
+
+                async saveApiKey() {
+                    if (!this.apiKeyInput.trim()) return;
+                    try {
+                        const res = await fetch(`${API}/auth/api-key`, {
+                            method: 'PUT',
+                            headers: this.authHeaders(),
+                            body: JSON.stringify({
+                                api_key: this.apiKeyInput,
+                                model: this.modelInput,
+                            }),
+                        });
+                        if (res.status === 401) { this.logout(); return; }
+                        if (res.ok) {
+                            this.hasApiKey = true;
+                            this.showSettingsModal = false;
+                            this.apiKeyInput = '';
+                            this.addMessage('system', '✅ API key saved securely. Ready to chat!');
+                        }
+                    } catch (err) {
+                        alert(`Error: ${err.message}`);
+                    }
+                },
+
+                logout() {
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                    // Clean up old client-side keys
+                    localStorage.removeItem('gemini_api_key');
+                    localStorage.removeItem('gemini_model');
+                    window.location.href = '/';
+                },
+
+                addMessage(role, content, isError = false) {
+                    this.messages.push({ id: this.msgId++, role, content, isError, isLoading: false });
+                    this.scrollToBottom();
+                },
+
+                scrollToBottom() {
+                    this.$nextTick(() => {
+                        if (this.$refs.messagesContainer) {
+                            this.$refs.messagesContainer.scrollTop = this.$refs.messagesContainer.scrollHeight;
+                        }
+                    });
+                },
+            },
+        }).mount('#app');
+    </script>
+</body>
+</html>

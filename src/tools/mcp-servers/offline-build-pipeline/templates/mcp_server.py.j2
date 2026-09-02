@@ -1,0 +1,35 @@
+#!/usr/bin/env python3
+"""
+{{ server_name }} — MCP Server
+
+{{ description }}
+
+Transport: {{ transport | default("stdio") }}
+"""
+
+import json
+import logging
+from typing import Any
+
+from mcp.server.fastmcp import FastMCP
+
+logger = logging.getLogger("{{ server_name }}")
+logger.setLevel(logging.DEBUG)
+
+mcp = FastMCP(
+    "{{ server_name }}",
+    description="{{ description }}",
+)
+
+{% for tool in tools %}
+@mcp.tool()
+def {{ tool.name }}({% for arg in tool.args %}{{ arg.name }}: {{ arg.type }}{% if arg.default %} = {{ arg.default }}{% endif %}{% if not loop.last %}, {% endif %}{% endfor %}) -> dict:
+    """
+    {{ tool.description }}
+    """
+    # TODO: Implement {{ tool.name }} logic
+    return {"status": "not_implemented"}
+{% endfor %}
+
+if __name__ == "__main__":
+    mcp.run(transport="{{ transport | default('stdio') }}")

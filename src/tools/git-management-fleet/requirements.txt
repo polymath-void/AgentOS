@@ -1,0 +1,2 @@
+# Standard libraries used heavily, no complex external dependencies required yet.
+# Core engine relies on the Native AI Engine (phi-3) bridge externally.

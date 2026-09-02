@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0a0a1a">
+    <meta name="description" content="SaaS-Agent — Your AI-powered personal agent platform. Automate tasks, control your device, and build custom AI agents. Free to start.">
+    <title>SaaS-Agent — AI Agent Platform</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect fill='%230a0a1a' width='32' height='32' rx='6'/><text x='50%' y='55%' font-size='20' text-anchor='middle' dominant-baseline='middle'>⚡</text></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg-primary: #050510;
+            --bg-secondary: #0a0a1a;
+            --bg-card: rgba(15, 15, 35, 0.6);
+            --accent-cyan: #00d4ff;
+            --accent-green: #00ff88;
+            --accent-purple: #a855f7;
+            --accent-pink: #ff006e;
+            --text-primary: #f0f0f5;
+            --text-secondary: #8888aa;
+            --border: rgba(255, 255, 255, 0.06);
+            --glow-cyan: rgba(0, 212, 255, 0.15);
+            --glow-green: rgba(0, 255, 136, 0.15);
+        }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* === AMBIENT BG === */
+        .ambient-bg {
+            position: fixed; inset: 0; z-index: -1; overflow: hidden;
+        }
+        .ambient-bg .orb {
+            position: absolute; border-radius: 50%; filter: blur(120px); opacity: 0.3;
+            animation: float 20s ease-in-out infinite;
+        }
+        .ambient-bg .orb:nth-child(1) { width: 600px; height: 600px; background: var(--accent-cyan); top: -10%; left: -5%; animation-delay: 0s; }
+        .ambient-bg .orb:nth-child(2) { width: 500px; height: 500px; background: var(--accent-purple); top: 40%; right: -10%; animation-delay: -7s; }
+        .ambient-bg .orb:nth-child(3) { width: 400px; height: 400px; background: var(--accent-green); bottom: -5%; left: 30%; animation-delay: -14s; }
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -40px) scale(1.05); }
+            66% { transform: translate(-20px, 20px) scale(0.95); }
+        }
+
+        /* === NAV === */
+        nav {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            padding: 1rem 2rem;
+            background: rgba(5, 5, 16, 0.8);
+            backdrop-filter: blur(20px) saturate(180%);
+            border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .nav-logo {
+            font-size: 1.3rem; font-weight: 800; letter-spacing: -0.5px;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-green));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+        .nav-actions { display: flex; gap: 0.75rem; align-items: center; }
+        .btn {
+            padding: 0.6rem 1.4rem; border-radius: 8px; font-weight: 600;
+            font-size: 0.9rem; cursor: pointer; transition: all 0.25s; border: none;
+            font-family: inherit; text-decoration: none; display: inline-flex; align-items: center;
+        }
+        .btn-ghost { background: transparent; color: var(--text-primary); border: 1px solid var(--border); }
+        .btn-ghost:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-cyan), #0099ff);
+            color: #000; font-weight: 700;
+            box-shadow: 0 4px 20px rgba(0, 212, 255, 0.3);
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0, 212, 255, 0.4); }
+        .btn-large { padding: 0.85rem 2rem; font-size: 1rem; border-radius: 10px; }
+
+        /* === HERO === */
+        .hero {
+            min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            text-align: center; padding: 8rem 2rem 4rem;
+            position: relative;
+        }
+        .hero-badge {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            padding: 0.5rem 1.2rem; border-radius: 100px;
+            background: rgba(0, 212, 255, 0.08); border: 1px solid rgba(0, 212, 255, 0.2);
+            font-size: 0.85rem; color: var(--accent-cyan); margin-bottom: 2rem;
+            animation: fadeInUp 0.6s ease;
+        }
+        .hero-badge .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent-green); animation: pulse 2s ease-in-out infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+        .hero h1 {
+            font-size: clamp(2.5rem, 7vw, 5rem); font-weight: 900;
+            line-height: 1.05; letter-spacing: -2px; max-width: 900px;
+            margin-bottom: 1.5rem; animation: fadeInUp 0.6s ease 0.1s both;
+        }
+        .hero h1 .gradient-text {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-green), var(--accent-purple));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+            background-size: 200% 200%; animation: gradientShift 4s ease-in-out infinite;
+        }
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        .hero p {
+            font-size: clamp(1rem, 2.5vw, 1.25rem); color: var(--text-secondary);
+            max-width: 600px; margin-bottom: 2.5rem; animation: fadeInUp 0.6s ease 0.2s both;
+        }
+        .hero-cta { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; animation: fadeInUp 0.6s ease 0.3s both; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .hero-visual {
+            margin-top: 4rem; width: 100%; max-width: 800px;
+            border-radius: 16px; border: 1px solid var(--border);
+            background: var(--bg-card); backdrop-filter: blur(10px);
+            overflow: hidden; animation: fadeInUp 0.8s ease 0.4s both;
+            box-shadow: 0 20px 80px rgba(0, 0, 0, 0.5), 0 0 60px var(--glow-cyan);
+        }
+        .hero-visual-header {
+            display: flex; align-items: center; gap: 0.5rem;
+            padding: 0.75rem 1rem; border-bottom: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.02);
+        }
+        .hero-visual-header .dot { width: 10px; height: 10px; border-radius: 50%; }
+        .hero-visual-header .dot:nth-child(1) { background: #ff5f57; }
+        .hero-visual-header .dot:nth-child(2) { background: #febc2e; }
+        .hero-visual-header .dot:nth-child(3) { background: #28c840; }
+        .hero-visual-header span { margin-left: 0.5rem; color: var(--text-secondary); font-size: 0.8rem; }
+        .hero-visual-body { padding: 1.5rem; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.85rem; line-height: 1.8; }
+        .hero-visual-body .line { opacity: 0; animation: typeLine 0.3s ease forwards; }
+        .hero-visual-body .line:nth-child(1) { animation-delay: 0.8s; }
+        .hero-visual-body .line:nth-child(2) { animation-delay: 1.2s; }
+        .hero-visual-body .line:nth-child(3) { animation-delay: 1.6s; }
+        .hero-visual-body .line:nth-child(4) { animation-delay: 2.0s; }
+        .hero-visual-body .line:nth-child(5) { animation-delay: 2.4s; }
+        @keyframes typeLine { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: translateX(0); } }
+        .c-cyan { color: var(--accent-cyan); }
+        .c-green { color: var(--accent-green); }
+        .c-purple { color: var(--accent-purple); }
+        .c-dim { color: var(--text-secondary); }
+
+        /* === SECTIONS === */
+        section { padding: 6rem 2rem; max-width: 1200px; margin: 0 auto; }
+        .section-label {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 2px;
+            color: var(--accent-cyan); margin-bottom: 1rem;
+        }
+        .section-title {
+            font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 800;
+            letter-spacing: -1px; margin-bottom: 1rem;
+        }
+        .section-subtitle { color: var(--text-secondary); font-size: 1.1rem; max-width: 600px; margin-bottom: 3rem; }
+
+        /* === FEATURES === */
+        .features-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+        }
+        .feature-card {
+            padding: 2rem; border-radius: 16px;
+            background: var(--bg-card); border: 1px solid var(--border);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease; position: relative; overflow: hidden;
+        }
+        .feature-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent-cyan), transparent);
+            opacity: 0; transition: opacity 0.3s;
+        }
+        .feature-card:hover { border-color: rgba(0, 212, 255, 0.2); transform: translateY(-4px); }
+        .feature-card:hover::before { opacity: 1; }
+        .feature-icon {
+            width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem; margin-bottom: 1.25rem;
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(0, 255, 136, 0.1));
+            border: 1px solid rgba(0, 212, 255, 0.15);
+        }
+        .feature-card h3 { font-size: 1.15rem; font-weight: 700; margin-bottom: 0.5rem; }
+        .feature-card p { color: var(--text-secondary); font-size: 0.95rem; line-height: 1.6; }
+
+        /* === PRICING === */
+        .pricing-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem; align-items: start;
+        }
+        .pricing-card {
+            padding: 2.5rem 2rem; border-radius: 16px;
+            background: var(--bg-card); border: 1px solid var(--border);
+            backdrop-filter: blur(10px); transition: all 0.3s;
+        }
+        .pricing-card.featured {
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 40px var(--glow-cyan);
+            position: relative;
+        }
+        .pricing-card.featured::after {
+            content: 'POPULAR'; position: absolute; top: -12px; right: 20px;
+            padding: 0.3rem 1rem; border-radius: 100px;
+            background: linear-gradient(135deg, var(--accent-cyan), #0099ff);
+            color: #000; font-weight: 700; font-size: 0.7rem; letter-spacing: 1px;
+        }
+        .pricing-card .plan-name { font-size: 1.1rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 0.5rem; }
+        .pricing-card .plan-price { font-size: 3rem; font-weight: 900; margin-bottom: 0.25rem; letter-spacing: -2px; }
+        .pricing-card .plan-price span { font-size: 1rem; font-weight: 500; color: var(--text-secondary); }
+        .pricing-card .plan-desc { color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 2rem; }
+        .pricing-card ul { list-style: none; margin-bottom: 2rem; }
+        .pricing-card ul li {
+            padding: 0.5rem 0; font-size: 0.95rem; color: var(--text-secondary);
+            display: flex; align-items: center; gap: 0.75rem;
+        }
+        .pricing-card ul li::before { content: '✓'; color: var(--accent-green); font-weight: 700; }
+        .pricing-card .btn { width: 100%; justify-content: center; }
+        .btn-outline {
+            background: transparent; color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+        .btn-outline:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); }
+
+        /* === CTA === */
+        .cta-section {
+            text-align: center; padding: 6rem 2rem;
+            position: relative;
+        }
+        .cta-section h2 { font-size: clamp(2rem, 5vw, 3rem); font-weight: 900; letter-spacing: -1px; margin-bottom: 1rem; }
+        .cta-section p { color: var(--text-secondary); font-size: 1.1rem; margin-bottom: 2rem; max-width: 500px; margin-inline: auto; }
+
+        /* === FOOTER === */
+        footer {
+            padding: 2rem; text-align: center;
+            border-top: 1px solid var(--border);
+            color: var(--text-secondary); font-size: 0.85rem;
+        }
+
+        /* === AUTH MODAL === */
+        .modal-overlay {
+            display: none; position: fixed; inset: 0; z-index: 1000;
+            background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(8px);
+            align-items: center; justify-content: center; padding: 1rem;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-box {
+            background: linear-gradient(160deg, #0f0f25, #0a0a1a);
+            border: 1px solid var(--border); border-radius: 20px;
+            padding: 2.5rem; width: 100%; max-width: 420px;
+            box-shadow: 0 20px 80px rgba(0, 0, 0, 0.6), 0 0 40px var(--glow-cyan);
+            animation: modalIn 0.3s ease;
+        }
+        @keyframes modalIn { from { opacity: 0; transform: scale(0.95) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        .modal-box h2 {
+            font-size: 1.5rem; font-weight: 800; margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-green));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+        .modal-box .subtitle { color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 2rem; }
+        .form-field { margin-bottom: 1.25rem; }
+        .form-field label { display: block; font-size: 0.85rem; font-weight: 500; color: var(--text-secondary); margin-bottom: 0.4rem; }
+        .form-field input {
+            width: 100%; padding: 0.75rem 1rem; border-radius: 10px;
+            background: rgba(255, 255, 255, 0.04); border: 1px solid var(--border);
+            color: var(--text-primary); font-size: 1rem; font-family: inherit;
+            transition: border-color 0.2s;
+        }
+        .form-field input:focus { outline: none; border-color: var(--accent-cyan); box-shadow: 0 0 0 3px var(--glow-cyan); }
+        .form-error { color: var(--accent-pink); font-size: 0.85rem; margin-top: 0.5rem; display: none; }
+        .form-error.visible { display: block; }
+        .modal-box .btn { width: 100%; justify-content: center; margin-top: 0.5rem; }
+        .modal-switch { text-align: center; margin-top: 1.5rem; color: var(--text-secondary); font-size: 0.9rem; }
+        .modal-switch a { color: var(--accent-cyan); cursor: pointer; text-decoration: none; font-weight: 600; }
+        .modal-close {
+            position: absolute; top: 1rem; right: 1rem; background: none; border: none;
+            color: var(--text-secondary); font-size: 1.5rem; cursor: pointer; padding: 0.5rem;
+            line-height: 1; transition: color 0.2s;
+        }
+        .modal-close:hover { color: var(--text-primary); }
+
+        /* === RESPONSIVE === */
+        @media (max-width: 768px) {
+            nav { padding: 0.75rem 1rem; }
+            .nav-logo { font-size: 1.1rem; }
+            .hero { padding: 7rem 1.5rem 3rem; }
+            section { padding: 4rem 1.5rem; }
+            .features-grid { grid-template-columns: 1fr; }
+            .pricing-grid { grid-template-columns: 1fr; max-width: 400px; margin-inline: auto; }
+            .hero-visual-body { font-size: 0.75rem; padding: 1rem; }
+            .btn-large { padding: 0.75rem 1.5rem; font-size: 0.95rem; }
+        }
+        @media (max-width: 480px) {
+            .hero h1 { letter-spacing: -1px; }
+            .nav-actions .btn-ghost { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="ambient-bg">
+        <div class="orb"></div>
+        <div class="orb"></div>
+        <div class="orb"></div>
+    </div>
+
+    <!-- NAV -->
+    <nav>
+        <div class="nav-logo">⚡ SaaS-Agent</div>
+        <div class="nav-actions">
+            <a href="#pricing" class="btn btn-ghost">Pricing</a>
+            <button class="btn btn-ghost" onclick="openModal('login')">Log In</button>
+            <button class="btn btn-primary" onclick="openModal('register')">Get Started Free</button>
+        </div>
+    </nav>
+
+    <!-- HERO -->
+    <section class="hero">
+        <div class="hero-badge">
+            <div class="dot"></div>
+            Now with Gemini 2.5 Flash
+        </div>
+        <h1>Your personal <span class="gradient-text">AI agent</span> platform</h1>
+        <p>Build custom AI agents that control your device, automate tasks, and execute workflows — all from a single chat interface.</p>
+        <div class="hero-cta">
+            <button class="btn btn-primary btn-large" onclick="openModal('register')">Start Building Free →</button>
+            <a href="#features" class="btn btn-ghost btn-large">See Features</a>
+        </div>
+        <div class="hero-visual">
+            <div class="hero-visual-header">
+                <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+                <span>saas-agent — chat</span>
+            </div>
+            <div class="hero-visual-body">
+                <div class="line"><span class="c-dim">you →</span> play some lo-fi beats</div>
+                <div class="line"><span class="c-green">⚡ Media Control →</span> Searching YouTube... <span class="c-cyan">streaming now</span></div>
+                <div class="line"><span class="c-dim">you →</span> set brightness to 30% and summarize my inbox</div>
+                <div class="line"><span class="c-purple">⚡ Multi-agent routing →</span> System Control + Email Assistant</div>
+                <div class="line"><span class="c-green">✓ Brightness 30%</span> · <span class="c-green">✓ 5 emails summarized</span></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section id="features">
+        <div class="section-label">✦ Features</div>
+        <h2 class="section-title">Everything you need to automate</h2>
+        <p class="section-subtitle">20+ built-in tools, intelligent card routing, and the ability to create your own AI agents on the fly.</p>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🎯</div>
+                <h3>Smart Intent Routing</h3>
+                <p>Your message is automatically classified and routed to the best specialized agent card — media, files, email, calendar, or system control.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🛠️</div>
+                <h3>20+ Built-in Tools</h3>
+                <p>YouTube playback, file management, SMS, call logs, Gmail, Google Calendar, notes, brightness control, WiFi toggle, and more.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">✨</div>
+                <h3>Create Custom Agents</h3>
+                <p>Describe what you want in plain English. The AI generates a specialized agent card with its own system prompt, tools, and behavior.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔄</div>
+                <h3>Model Fallback</h3>
+                <p>Automatic fallback across Gemini models. If one is busy, your request seamlessly routes to the next available model — zero downtime.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📱</div>
+                <h3>PWA — Install Anywhere</h3>
+                <p>Works as a Progressive Web App. Install on your phone's home screen for a native app experience with offline support.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔐</div>
+                <h3>Secure by Design</h3>
+                <p>JWT authentication, server-side API key storage, rate limiting, and input validation on every request. Your data stays yours.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- PRICING -->
+    <section id="pricing">
+        <div class="section-label">✦ Pricing</div>
+        <h2 class="section-title">Simple, transparent pricing</h2>
+        <p class="section-subtitle">Start free. Upgrade when you need more power.</p>
+        <div class="pricing-grid">
+            <div class="pricing-card">
+                <div class="plan-name">Free</div>
+                <div class="plan-price">$0 <span>/month</span></div>
+                <div class="plan-desc">Perfect for trying it out</div>
+                <ul>
+                    <li>50 messages per day</li>
+                    <li>5 custom agent cards</li>
+                    <li>All 20+ built-in tools</li>
+                    <li>8 pre-built agent cards</li>
+                    <li>PWA support</li>
+                </ul>
+                <button class="btn btn-outline btn-large" onclick="openModal('register')">Get Started</button>
+            </div>
+            <div class="pricing-card featured">
+                <div class="plan-name">Pro</div>
+                <div class="plan-price">$19 <span>/month</span></div>
+                <div class="plan-desc">For power users and builders</div>
+                <ul>
+                    <li>10,000 messages per day</li>
+                    <li>100 custom agent cards</li>
+                    <li>Priority model access</li>
+                    <li>Chat history export</li>
+                    <li>Priority support</li>
+                </ul>
+                <button class="btn btn-primary btn-large" onclick="openModal('register')">Start Pro Trial</button>
+            </div>
+            <div class="pricing-card">
+                <div class="plan-name">Enterprise</div>
+                <div class="plan-price">$49 <span>/month</span></div>
+                <div class="plan-desc">For teams and organizations</div>
+                <ul>
+                    <li>Unlimited messages</li>
+                    <li>1,000 custom cards</li>
+                    <li>Team accounts</li>
+                    <li>API access</li>
+                    <li>Dedicated support</li>
+                </ul>
+                <button class="btn btn-outline btn-large" onclick="openModal('register')">Contact Us</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="cta-section">
+        <h2>Ready to build your<br><span class="gradient-text" style="background:linear-gradient(135deg,var(--accent-cyan),var(--accent-green));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">AI agent platform</span>?</h2>
+        <p>Free to start. No credit card required. Ship your first agent in 5 minutes.</p>
+        <button class="btn btn-primary btn-large" onclick="openModal('register')">Create Free Account →</button>
+    </section>
+
+    <footer>
+        <p>© 2026 SaaS-Agent. Built with ⚡ and shipped.</p>
+    </footer>
+
+    <!-- AUTH MODALS -->
+    <div class="modal-overlay" id="authModal">
+        <div class="modal-box" style="position:relative;">
+            <button class="modal-close" onclick="closeModal()">×</button>
+
+            <!-- Register Form -->
+            <div id="registerForm">
+                <h2>Create your account</h2>
+                <p class="subtitle">Start building AI agents in minutes.</p>
+                <div class="form-field">
+                    <label>Email</label>
+                    <input type="email" id="regEmail" placeholder="you@example.com" autocomplete="email">
+                </div>
+                <div class="form-field">
+                    <label>Password</label>
+                    <input type="password" id="regPassword" placeholder="Min 8 characters" autocomplete="new-password">
+                </div>
+                <div class="form-field">
+                    <label>Display Name <span style="color:var(--text-secondary);font-weight:400;">(optional)</span></label>
+                    <input type="text" id="regName" placeholder="Your name" autocomplete="name">
+                </div>
+                <div class="form-error" id="regError"></div>
+                <button class="btn btn-primary btn-large" id="regSubmit" onclick="handleRegister()">Create Account</button>
+                <div class="modal-switch">Already have an account? <a onclick="switchForm('login')">Log in</a></div>
+            </div>
+
+            <!-- Login Form -->
+            <div id="loginForm" style="display:none;">
+                <h2>Welcome back</h2>
+                <p class="subtitle">Log in to your agent platform.</p>
+                <div class="form-field">
+                    <label>Email</label>
+                    <input type="email" id="loginEmail" placeholder="you@example.com" autocomplete="email">
+                </div>
+                <div class="form-field">
+                    <label>Password</label>
+                    <input type="password" id="loginPassword" placeholder="Your password" autocomplete="current-password">
+                </div>
+                <div class="form-error" id="loginError"></div>
+                <button class="btn btn-primary btn-large" id="loginSubmit" onclick="handleLogin()">Log In</button>
+                <div class="modal-switch">Don't have an account? <a onclick="switchForm('register')">Sign up free</a></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API = window.location.origin;
+
+        // --- Modal ---
+        function openModal(type) {
+            document.getElementById('authModal').classList.add('active');
+            switchForm(type);
+        }
+        function closeModal() {
+            document.getElementById('authModal').classList.remove('active');
+            clearErrors();
+        }
+        function switchForm(type) {
+            document.getElementById('registerForm').style.display = type === 'register' ? 'block' : 'none';
+            document.getElementById('loginForm').style.display = type === 'login' ? 'block' : 'none';
+            clearErrors();
+        }
+        function clearErrors() {
+            document.querySelectorAll('.form-error').forEach(el => { el.textContent = ''; el.classList.remove('visible'); });
+        }
+        function showError(id, msg) {
+            const el = document.getElementById(id);
+            el.textContent = msg;
+            el.classList.add('visible');
+        }
+
+        // --- Auth ---
+        async function handleRegister() {
+            const email = document.getElementById('regEmail').value.trim();
+            const password = document.getElementById('regPassword').value;
+            const name = document.getElementById('regName').value.trim();
+
+            if (!email || !password) return showError('regError', 'Email and password are required.');
+            if (password.length < 8) return showError('regError', 'Password must be at least 8 characters.');
+
+            const btn = document.getElementById('regSubmit');
+            btn.disabled = true;
+            btn.textContent = 'Creating...';
+
+            try {
+                const res = await fetch(`${API}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password, display_name: name }),
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.detail || 'Registration failed');
+
+                localStorage.setItem('token', data.access_token);
+                localStorage.setItem('user', JSON.stringify(data.user));
+                window.location.href = '/app';
+            } catch (err) {
+                showError('regError', err.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Create Account';
+            }
+        }
+
+        async function handleLogin() {
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+
+            if (!email || !password) return showError('loginError', 'Email and password are required.');
+
+            const btn = document.getElementById('loginSubmit');
+            btn.disabled = true;
+            btn.textContent = 'Logging in...';
+
+            try {
+                const res = await fetch(`${API}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password }),
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.detail || 'Login failed');
+
+                localStorage.setItem('token', data.access_token);
+                localStorage.setItem('user', JSON.stringify(data.user));
+                window.location.href = '/app';
+            } catch (err) {
+                showError('loginError', err.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Log In';
+            }
+        }
+
+        // Auto-redirect if already logged in
+        if (localStorage.getItem('token')) {
+            window.location.href = '/app';
+        }
+
+        // Close modal on backdrop click
+        document.getElementById('authModal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        // Enter key support
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                if (document.getElementById('registerForm').style.display !== 'none') handleRegister();
+                else handleLogin();
+            }
+            if (e.key === 'Escape') closeModal();
+        });
+    </script>
+</body>
+</html>
