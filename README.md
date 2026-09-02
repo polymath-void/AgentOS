@@ -66,8 +66,14 @@ On heavily sandboxed, non-rooted edge devices, the Docker Daemon (`dockerd`) can
 You can bypass Docker entirely and boot the OS directly into the native Python runtime environment:
 
 ```bash
-# 1. Install directly from PyPI (Coming soon!)
+# 1. Install directly from PyPI (Core OS only - bypasses WebRTC C-compilers)
 pip install agentos
+
+# (Optional) If you want full WebRTC capability natively on Android Termux:
+# Run the included Termux build optimizer which natively compiles PyAV C-bindings
+# and bypasses the GNU libc.so.6 constraints:
+chmod +x termux_setup.sh
+./termux_setup.sh
 
 # 2. Boot the native Kernel
 agentos
