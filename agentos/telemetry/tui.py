@@ -15,87 +15,97 @@ except ImportError:
 
 
 class Agent:
-    def __init__(self, name: str, symbol: str, color: str, x: float, y: float):
+    def __init__(self, name: str, symbol: str, color: str, x_pct: float, y_pct: float):
         self.name = name
         self.symbol = symbol
         self.color = color
-        self.x = x
-        self.y = y
-        self.target_x = x
-        self.target_y = y
+        self.x_pct = x_pct
+        self.y_pct = y_pct
+        self.target_x_pct = x_pct
+        self.target_y_pct = y_pct
         self.dialogue = "Awaiting intent..."
 
     def move(self, speed: float) -> bool:
-        dx = self.target_x - self.x
-        dy = self.target_y - self.y
+        dx = self.target_x_pct - self.x_pct
+        dy = self.target_y_pct - self.y_pct
         dist = (dx**2 + dy**2)**0.5
-        if dist > 0.1:
-            self.x += (dx / dist) * speed
-            self.y += (dy / dist) * speed
+        if dist > 0.01:
+            self.x_pct += (dx / dist) * speed
+            self.y_pct += (dy / dist) * speed
             return True
         return False
 
-
 class OfficeMap(Static):
-    """A 2D Top-Down Virtual Office Map using Rich Text."""
+    """A Dynamic 2D Virtual Office Map using Rich Text."""
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.grid_width = 50
-        self.grid_height = 12
-        
-        # Initialize agents
-        self.claude = Agent("Claude (Architect)", "C", "red", 25, 6)
-        self.gemini = Agent("Gemini (Memory Vectorizer)", "G", "blue", 27, 6)
+        # Initialize agents (positions as percentages 0.0-1.0)
+        self.claude = Agent("Claude (Architect)", "C", "red", 0.5, 0.5)
+        self.gemini = Agent("Gemini (Memory Vectorizer)", "G", "blue", 0.55, 0.5)
         self.agents_list = [self.claude, self.gemini]
         
-        # Start movement loop (60fps target -> ~0.016s)
+        # Start movement loop
         self.update_timer = self.set_interval(1 / 60, self.tick)
 
     def tick(self) -> None:
         changed = False
-        speed = 0.3  # Agent movement speed
-        
+        speed = 0.01  # Agent movement speed in %
         for agent in self.agents_list:
             if agent.move(speed):
                 changed = True
-                
         if changed:
             self.refresh(layout=True)
 
     def render(self) -> str:
+        width = max(20, self.size.width)
+        height = max(10, self.size.height)
+        
+        # Reserve space for dialogues at the bottom
+        grid_height = max(5, height - 6)
+        grid_width = width
+        
         # Build base grid
-        grid = [['[grey37]·[/grey37]' for _ in range(self.grid_width)] for _ in range(self.grid_height)]
+        grid = [['[grey37]·[/grey37]' for _ in range(grid_width)] for _ in range(grid_height)]
         
         # Draw Walls
-        for x in range(self.grid_width):
+        for x in range(grid_width):
             grid[0][x] = '[bright_black]█[/bright_black]'
-            grid[self.grid_height-1][x] = '[bright_black]█[/bright_black]'
-        for y in range(self.grid_height):
+            grid[grid_height-1][x] = '[bright_black]█[/bright_black]'
+        for y in range(grid_height):
             grid[y][0] = '[bright_black]█[/bright_black]'
-            grid[y][self.grid_width-1] = '[bright_black]█[/bright_black]'
+            grid[y][grid_width-1] = '[bright_black]█[/bright_black]'
             
-        # Draw Claude's Desk
-        for dx in range(8, 12):
-            grid[3][dx] = '[yellow]▄[/yellow]'
+        # Draw Claude's Desk (15% to 25% width, 25% height)
+        c_start = int(0.15 * grid_width)
+        c_end = int(0.25 * grid_width)
+        c_y = int(0.25 * grid_height)
+        for dx in range(c_start, c_end):
+            if dx < grid_width: grid[c_y][dx] = '[yellow]▄[/yellow]'
             
-        # Draw Gemini's Desk
-        for dx in range(38, 42):
-            grid[8][dx] = '[yellow]▄[/yellow]'
+        # Draw Gemini's Desk (75% to 85% width, 75% height)
+        g_start = int(0.75 * grid_width)
+        g_end = int(0.85 * grid_width)
+        g_y = int(0.75 * grid_height)
+        for dx in range(g_start, g_end):
+            if dx < grid_width: grid[g_y][dx] = '[yellow]▄[/yellow]'
 
-        # Draw Server Rack / Datacenter
-        for dy in range(2, 5):
-            grid[dy][47] = '[cyan]█[/cyan]'
-            grid[dy][48] = '[cyan]█[/cyan]'
+        # Draw Server Rack (90% width, 20% to 40% height)
+        s_x1, s_x2 = int(0.9 * grid_width), int(0.92 * grid_width)
+        s_y1, s_y2 = int(0.2 * grid_height), int(0.4 * grid_height)
+        for dy in range(s_y1, s_y2):
+            if dy < grid_height:
+                if s_x1 < grid_width: grid[dy][s_x1] = '[cyan]█[/cyan]'
+                if s_x2 < grid_width: grid[dy][s_x2] = '[cyan]█[/cyan]'
 
         # Overlay Agents
         dialogues = []
         for agent in self.agents_list:
-            ax = int(round(agent.x))
-            ay = int(round(agent.y))
+            ax = int(round(agent.x_pct * grid_width))
+            ay = int(round(agent.y_pct * grid_height))
             # Keep within bounds
-            ax = max(1, min(self.grid_width - 2, ax))
-            ay = max(1, min(self.grid_height - 2, ay))
+            ax = max(1, min(grid_width - 2, ax))
+            ay = max(1, min(grid_height - 2, ay))
             
             grid[ay][ax] = f"[bold {agent.color}]{agent.symbol}[/bold {agent.color}]"
             
@@ -103,9 +113,7 @@ class OfficeMap(Static):
                 dialogues.append(f"[{agent.color}]{agent.name}[/{agent.color}]: {agent.dialogue}")
 
         # Render rows
-        lines = []
-        for y in range(self.grid_height):
-            lines.append("".join(grid[y]))
+        lines = ["".join(grid[y]) for y in range(grid_height)]
             
         map_str = "\n".join(lines)
         if dialogues:
@@ -242,25 +250,25 @@ class AgentOSTelemetryApp(App):
                     # Process Intent & Move Agents
                     code_str = intent.get("code", "")
                     if "summit" in code_str.lower() or "claude" in code_str.lower():
-                        self.office_map.claude.target_x = 10
-                        self.office_map.claude.target_y = 3
+                        self.office_map.claude.target_x_pct = 0.20
+                        self.office_map.claude.target_y_pct = 0.25
                         self.office_map.claude.dialogue = "Processing remote Summit Payload via WebRTC!"
-                        self.office_map.gemini.target_x = 27
-                        self.office_map.gemini.target_y = 6
+                        self.office_map.gemini.target_x_pct = 0.55
+                        self.office_map.gemini.target_y_pct = 0.50
                         self.office_map.gemini.dialogue = "Monitoring background channels."
                     elif "weather" in code_str.lower():
-                        self.office_map.gemini.target_x = 40
-                        self.office_map.gemini.target_y = 8
+                        self.office_map.gemini.target_x_pct = 0.80
+                        self.office_map.gemini.target_y_pct = 0.75
                         self.office_map.gemini.dialogue = "Executing external API Fetch via WASM Sandbox!"
-                        self.office_map.claude.target_x = 25
-                        self.office_map.claude.target_y = 6
+                        self.office_map.claude.target_x_pct = 0.50
+                        self.office_map.claude.target_y_pct = 0.50
                         self.office_map.claude.dialogue = "Waiting for data vectorization."
                     else:
-                        self.office_map.claude.target_x = 10
-                        self.office_map.claude.target_y = 3
+                        self.office_map.claude.target_x_pct = 0.20
+                        self.office_map.claude.target_y_pct = 0.25
                         self.office_map.claude.dialogue = "Analyzing intent AST signature..."
-                        self.office_map.gemini.target_x = 40
-                        self.office_map.gemini.target_y = 8
+                        self.office_map.gemini.target_x_pct = 0.80
+                        self.office_map.gemini.target_y_pct = 0.75
                         self.office_map.gemini.dialogue = "Vectorizing outcome into Hyperbolic space..."
                         
                     # Request map redraw
@@ -274,12 +282,12 @@ class AgentOSTelemetryApp(App):
                     
                     # Revert dialog and return agents to center if idle
                     if random.random() > 0.8:
-                        self.office_map.claude.target_x = 25
-                        self.office_map.claude.target_y = 6
+                        self.office_map.claude.target_x_pct = 0.50
+                        self.office_map.claude.target_y_pct = 0.50
                         self.office_map.claude.dialogue = "Awaiting intent..."
                         
-                        self.office_map.gemini.target_x = 27
-                        self.office_map.gemini.target_y = 6
+                        self.office_map.gemini.target_x_pct = 0.55
+                        self.office_map.gemini.target_y_pct = 0.50
                         self.office_map.gemini.dialogue = "Awaiting intent..."
                         
                         self.office_map.refresh()
