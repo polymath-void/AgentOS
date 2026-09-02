@@ -12,7 +12,7 @@ logger = logging.getLogger("Signaling")
 # Maps swarm_id -> dict(node_id -> websocket)
 swarms = defaultdict(dict)
 
-async def handle_client(websocket, path):
+async def handle_client(websocket):
     """Handles incoming WebSocket connections and routes P2P negotiation packets."""
     node_id = None
     swarm_id = None
