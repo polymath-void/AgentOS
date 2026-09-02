@@ -8,7 +8,6 @@ try:
     from textual.containers import Container, Horizontal, Vertical
     from textual.widgets import Static, Log, ProgressBar, TabbedContent, TabPane, Label
     from textual.reactive import reactive
-    from textual.geometry import Offset
 except ImportError:
     print("AgentOS Visual Telemetry requires the 'textual' framework.")
     sys.exit(1)
@@ -36,8 +35,8 @@ class AgentAvatar(Static):
         target_x = int(parent_width * target_x_pct)
         target_y = int(parent_height * target_y_pct)
         
-        # Smoothly animate the textual styles offset
-        self.styles.animate("offset", value=Offset(target_x, target_y), duration=1.5, easing="in_out_cubic")
+        # Native CSS transition handles the smooth animation
+        self.styles.offset = (target_x, target_y)
 
 class Desk(Static):
     pass
@@ -133,6 +132,7 @@ class DashboardApp(App):
         width: 6;
         height: 1;
         content-align: center middle;
+        transition: offset 1.5s in_out_cubic;
     }
     
     .mock_agent {
