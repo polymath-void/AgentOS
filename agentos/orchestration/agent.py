@@ -36,7 +36,7 @@ class BaseAgent:
                     "payload": {
                         "action": "REQUEST_CAPABILITY",
                         "capability": "FS_WRITE",
-                        "target_path": f"/agentos/tools/evolved_skills/{tool_name}.py",
+                        "target_path": f"~/.agentos/tools/evolved_skills/{tool_name}.py",
                         "ast_heuristic": "Safe" if "os.system" not in code else "DANGEROUS"
                     }
                 }
@@ -60,7 +60,8 @@ class BaseAgent:
                     return f"[Capability Oracle] FATAL: Swarm Consensus Timeout. Access Denied to {tool_name}.py."
                 # ----------------------------------------------------
                 
-                evolved_path = "/data/data/com.termux/files/home/Projects/AgentOS/agentos/tools/evolved_skills"
+                import os
+                evolved_path = os.path.expanduser("~/.agentos/tools/evolved_skills")
                 os.makedirs(evolved_path, exist_ok=True)
                 skill_file = os.path.join(evolved_path, f"{tool_name}.py")
                 
