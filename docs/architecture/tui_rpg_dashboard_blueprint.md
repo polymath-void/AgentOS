@@ -1,54 +1,108 @@
-# AgentOS TUI RPG Dashboard Blueprint
+# AgentOS OpenClaw Telemetry Dashboard Architecture Blueprint
 
-## 1. Overview
-This document outlines the architectural blueprint for the AgentOS Terminal User Interface (TUI). The dashboard is designed to be highly optimized, asynchronous, and visually engaging, adopting an RPG-style layout for agent interaction.
+## 1. Executive Summary
+This document defines the production-grade architecture of the **AgentOS OpenClaw Telemetry Dashboard** (`agentos/telemetry/tui.py`). The dashboard provides a high-fidelity, real-time, terminal-native environment for observing, orchestrating, and inspecting decentralized AI swarm node activities, WASM fuel consumption, hyperbolic vector memory queries, and dynamic skill executions.
 
-## 2. Technology Stack
-- **Framework**: **Textual** (Python) - Chosen for its robust CSS-like layout engine, async event loop, and excellent widget ecosystem.
-- **Rendering Engine**: **Rich** (Python) - Used extensively under the hood by Textual for rendering progress bars, panels, syntax highlighting, and styled text.
-- **Async Runtime**: Python's `asyncio` for non-blocking UI updates and event stream processing.
+---
 
-## 3. Layout Structure (Grid Layout)
-The dashboard utilizes Textual's CSS Grid layout to define clear, non-overlapping regions.
+## 2. Technology Stack & Frameworks
+- **UI Framework**: [Textual](https://textual.textualize.io/) (Python) – Native CSS layout engine, reactive component lifecycle, async workers, and keyboard/mouse navigation.
+- **Visual Formatting**: [Rich](https://github.com/Textualize/rich) – Terminal markup, progress bars, tables, syntax highlighting, and color styling.
+- **IPC Telemetry Transport**: ZeroMQ (`pyzmq.asyncio`) – Asynchronous PUB/SUB socket bound to `tcp://127.0.0.1:5562` for non-blocking stream ingestion.
+- **Asynchronous Execution**: Python `asyncio` with Textual `@work` background tasks.
 
-```css
-Screen {
-    layout: grid;
-    grid-size: 1 4;
-    grid-rows: 3 5 1fr 10;
-}
+---
+
+## 3. 3-Tab Architecture & Layout Specification
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ AgentOS OpenClaw Frontend │ Decentralized Swarm Telemetry                   │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  [🏢 Virtual Office]    [💻 Skill Workbench]    [⚙️ System Console]           │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ ⚡ WASM Fuel Engine & Capacity         │ 🧠 Hyperbolic Vector DB Telemetry  │
+│ Capacity: 1,000,000 | Used: 142,500    │ Indexed Vectors: 14,280 | Depth: 12 │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ 🏢 Virtual Office Grid Box (Dynamic Interacted Agents Only)                │
+│ ┌───────────────────────────────────┬─────────────────────────────────────┐ │
+│ │ 🤖 Claude (Architect Engine)       │ 🦉 Gemini (Vector Memory)           │ │
+│ │ Status: WORKING                   │ Status: SPEAKING                    │ │
+│ └───────────────────────────────────┴─────────────────────────────────────┘ │
+├─────────────────────────────────────┬───────────────────────────────────────┤
+│ 📊 ZeroMQ Intent Stream             │ 💬 Live Swarm Dialogue Feed           │
+│ > execute_dynamic_python...         │ [Claude]: Re-routing ZeroMQ broker... │
+└─────────────────────────────────────┴───────────────────────────────────────┘
 ```
 
-### 3.1 Top Panel: Global Mesh Status
-- **Position**: Row 1
-- **Content**: Real-time counter of active nodes.
-- **Example**: `[ Active Nodes: 12 | Global WASM Fuel: 85,400 ]`
-- **Implementation**: A Textual `Static` widget with centered, bold Rich text. Updated via reactive attributes.
+### 3.1 Tab 1: 🏢 Virtual Office (Swarm Runtime & Telemetry)
+The main operational view for monitoring swarm nodes and real-time execution telemetry.
 
-### 3.2 Sub-Top Panel: WASM Fuel & Node Diagnostics
-- **Position**: Row 2 (Separated from Top Panel by a Rich `Rule`)
-- **Content**: Live progress bars for each active node's remaining compute capacity.
-- **Implementation**: A horizontal container (`HorizontalScroll` or `Grid`) holding custom `ProgressBar` widgets (using Rich's `Progress` classes) for each node.
+1. **Top Telemetry Header Bar**:
+   - **WASM Fuel Engine Card (`FuelEngineCard`)**: Tracks Total Fuel Capacity (1,000,000 Fuel), Used Fuel, Burn Rate (fuel/sec), and Bounded RAM Usage (512 MB).
+   - **Hyperbolic Vector DB Card (`HyperbolicDBCard`)**: Displays Indexed Vectors count (14,280+), AST Tree Depth (12), Search Latency (ms), and Poincaré Ball distance metric ($d_H$).
+2. **Virtual Office Floor Grid Box (`#active_agents_grid_box`)**:
+   - Styled 2x2 grid container (`border: round #38BDF8; background: #0D1117;`).
+   - **Dynamic Interacted Agent Mounting**: Starts completely clean with an empty placeholder. Agent cards (`AgentCard`) are instantiated and mounted **ONLY when ZMQ telemetry receives active agent intents**.
+   - **Vibrant Agent Palette**:
+     - **Claude**: `#FF6B6B` (Architect Engine)
+     - **Gemini**: `#38BDF8` (Bright Cyan – High Visibility contrast on dark backgrounds)
+     - **Copilot**: `#4ADE80` (IDE Sidecar Bridge)
+     - **Cursor**: `#FACC15` (CRDT AST Mutator)
+     - **SwarmWorker**: `#C084FC` (Dynamic Swarm Node)
+3. **Split Telemetry & Dialogue Feed**:
+   - **Left Panel (35%)**: Real-time ZeroMQ intent stream log (`#telemetry_stream_log`).
+   - **Right Panel (65%)**: Rich formatted live swarm dialogue feed (`#dialogue_log`).
 
-### 3.3 Main View: RPG-Style Agent Nodes
-- **Position**: Row 3 (Expands to fill remaining space `1fr`)
-- **Content**: Visualizes Agent nodes (e.g., Gemini, Claude, Copilot) as RPG characters. Includes dynamic text boxes representing live conversations.
-- **Implementation**: 
-  - A dynamic `Grid` or `HorizontalScroll` view based on the user's active nodes.
-  - Each node is a custom `AgentNodeWidget`.
-  - ASCII art or Rich `Panel` structures represent the "character".
-  - A Rich `Markdown` or `Text` widget inside a styled `Panel` acts as the speech bubble/dialogue box.
+---
 
-### 3.4 Bottom Panel: Hyperbolic Event Stream
-- **Position**: Row 4 (Fixed height, e.g., 10 lines)
-- **Content**: A scrolling, live-updating log of all intents and systemic events.
-- **Implementation**: Textual's `RichLog` or `TextLog` widget. It efficiently handles appending new lines and auto-scrolling without redrawing the entire screen.
+### 3.2 Tab 2: 💻 Skill Workbench
+The interactive workspace for editing skills and cataloging registered system tools.
 
-## 4. Async Update Loop
-The dashboard relies on Textual's async message passing and reactive properties.
+1. **Active Skill Editor (`TextArea`)**:
+   - Full code editor widget with Python/YAML syntax highlighting for editing dynamic WASM skill executables.
+2. **Registered Tools & Skills Catalog (`DataTable`)**:
+   - Interactive table listing all native AgentOS tools and registered MCP capabilities:
+     - `execute_dynamic_python` (Core WASM Execution Sandbox)
+     - `hyperbolic_vector_search` (Poincaré Ball Memory Indexer)
+     - `crdt_ast_mutate` (Concurrent Multi-Agent AST File Mutator)
+     - `wasm_fuel_sandbox` (Capability & RAM Bounding Oracle)
+     - `webrtc_swarm_route` (Decentralized Peer-to-Peer Mesh)
+     - `mcp_supabase_execute_sql` & `mcp_supabase_list_tables` (Supabase MCP Integration)
+     - `agentos_core_skill` (Core Workflow Skill)
+   - Features `zebra_stripes = True`, row cursor highlighting, and layout refresh on `TabbedContent.TabActivated` events.
+3. **Mermaid Flowchart Generator (`#mermaid_pane`)**:
+   - Visual log rendering Mermaid syntax diagrams for multi-agent workflow pipelines.
 
-1. **State Management**: Reactive variables track `global_fuel`, `active_nodes`, and individual `node_stats`.
-2. **Event Workers**: Textual `@work` decorators are used to spawn background tasks that listen to the AgentOS event bus (e.g., via ZeroMQ, Redis, or WebSockets).
-3. **UI Updates**:
-   - As events arrive (e.g., a node consumes fuel, or a new dialogue message is generated), the background worker updates the reactive variables or sends a Textual `Message`.
-   - Textual automatically schedules a UI refresh for the affected widgets, ensuring a smooth 60FPS experience without blocking the main thread.
+---
+
+### 3.3 Tab 3: ⚙️ System Console
+- Low-level system event log capturing raw ZMQ socket frames (`tcp://127.0.0.1:5562`), IPC broker routing messages, and thread worker lifecycle events.
+
+---
+
+## 4. ZeroMQ Async Event Pipeline & Reactive Lifecycle
+
+```
+[AgentOS Kernel / MCP Gateway]
+              │ (PUB tcp://127.0.0.1:5562)
+              ▼
+    [listen_swarm_telemetry Worker]
+              │
+              ├──► Parse Intent Payload (JSON)
+              ├──► Update FuelEngineCard & HyperbolicDBCard
+              ├──► Query #active_agents_grid_box Container
+              │         │
+              │         ├── If Agent absent: Mount new AgentCard dynamically
+              │         └── If Agent present: Update reactive agent_status & active_task
+              │
+              └──► Append formatted line to dialogue_log & telemetry_stream_log
+```
+
+---
+
+## 5. Design Tokens & Styling Guide
+- **Background**: `#0B0E14` (Deep Space Dark)
+- **Container Surfaces**: `#161B22` / `#0D1117`
+- **Borders**: `#30363D` (Muted), `#38BDF8` (Cyan Accent), `#58A6FF` (Blue Accent), `#D2A8FF` (Purple Accent)
+- **Typography**: Rich bold/italic text markup with semantic color badges (`[bold cyan]● SPEAKING[/bold cyan]`, `[bold green]● EXECUTING[/bold green]`).
