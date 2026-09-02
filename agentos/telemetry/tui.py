@@ -90,7 +90,6 @@ class DashboardApp(App):
     #header { height: 3; content-align: center middle; background: $boost; border-bottom: heavy $accent; }
     
     VirtualOffice {
-        layout: absolute;
         height: 1fr;
         width: 1fr;
         background: #0D1117; /* GitHub Dark theme background */
