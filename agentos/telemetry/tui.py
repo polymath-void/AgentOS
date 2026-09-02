@@ -208,11 +208,13 @@ class DashboardApp(App):
 
     .editor_column {
         width: 45%;
+        height: 100%;
         margin-right: 1;
     }
 
     .tools_column {
         width: 55%;
+        height: 100%;
     }
 
     #editor_pane {
@@ -221,13 +223,14 @@ class DashboardApp(App):
     }
 
     #tools_table {
-        height: 60%;
+        height: 1fr;
         border: round #4ADE80;
         background: #161B22;
+        margin-bottom: 1;
     }
 
     #mermaid_pane {
-        height: 40%;
+        height: 1fr;
         border: round #C084FC;
         background: #090D12;
     }
@@ -313,6 +316,8 @@ class DashboardApp(App):
 
     def populate_registered_tools(self) -> None:
         """Register and populate all native AgentOS tools and skills on the Skill Workbench catalog."""
+        self.tools_table.cursor_type = "row"
+        self.tools_table.zebra_stripes = True
         registered_items = [
             ("execute_dynamic_python", "Core Exec", "WASM Sandbox", "ACTIVE"),
             ("hyperbolic_vector_search", "Memory DB", "Hyperbolic Engine", "ACTIVE"),
@@ -325,6 +330,11 @@ class DashboardApp(App):
         ]
         for item in registered_items:
             self.tools_table.add_row(*item)
+
+    def on_tabbed_content_tab_activated(self, event: TabbedContent.TabActivated) -> None:
+        """Refresh DataTable layout when user switches to Skill Workbench tab."""
+        if event.tab.id == "tab_workbench":
+            self.tools_table.refresh(layout=True)
 
     async def register_agent_interaction(self, name: str, status: str, task: str) -> None:
         """Dynamically add or update an interacted agent card inside the Office Grid Box."""
