@@ -3,7 +3,8 @@ Name: agentos
 Version: 1.0.0
 Summary: AgentOS High-Performance Swarm Ecosystem
 Requires-Python: >=3.10
-Requires-Dist: aiortc>=1.6.0
 Requires-Dist: wasmtime>=16.0.0
 Requires-Dist: websockets
 Requires-Dist: pyzmq
+Provides-Extra: swarm
+Requires-Dist: aiortc>=1.6.0; extra == "swarm"

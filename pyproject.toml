@@ -8,11 +8,13 @@ version = "1.0.0"
 description = "AgentOS High-Performance Swarm Ecosystem"
 requires-python = ">=3.10"
 dependencies = [
-    "aiortc>=1.6.0",
     "wasmtime>=16.0.0",
     "websockets",
     "pyzmq"
 ]
+
+[project.optional-dependencies]
+swarm = ["aiortc>=1.6.0"]
 
 [project.scripts]
 agentos = "agentos.orchestration.kernel:main"
