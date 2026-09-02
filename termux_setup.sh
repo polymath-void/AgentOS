@@ -1,10 +1,10 @@
-#!/bin/bash
+#!/data/data/com.termux/files/usr/bin/bash
 echo "==================================================="
 echo "🚀 AgentOS: Native Termux Build Optimizer"
 echo "==================================================="
 echo ""
 echo "[1/4] Installing Native C-Compilers and FFmpeg/WebRTC Headers..."
-pkg install -y clang ffmpeg libsrtp python-dev curl wget tar || { echo "Failed to install dependencies"; exit 1; }
+pkg install -y clang ffmpeg libsrtp python curl wget tar || { echo "Failed to install dependencies"; exit 1; }
 
 echo ""
 echo "[2/4] Downloading and Patching PyAV Cython Compiler..."
