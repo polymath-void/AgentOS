@@ -53,6 +53,29 @@ docker run -d --name agentos-kernel --network host agentos-core
 
 ---
 
+## 📱 Hardware Capabilities: Rooted vs. Non-Rooted Edge Devices
+
+AgentOS is designed to run everywhere—from AWS clusters down to Android smartphones in your pocket. 
+
+### 🟢 Rooted Devices & Standard OS (Linux, macOS, Windows)
+If you have root access to `cgroups` and namespaces (e.g., standard servers, laptops, or rooted Android devices), we **strongly recommend** the Docker deployment strategy above. The container isolates the WebRTC C-bindings and prevents capability bleeding from the Wasmtime engine.
+
+### 🟡 Non-Rooted Environments (e.g., Android Termux)
+On heavily sandboxed, non-rooted edge devices, the Docker Daemon (`dockerd`) cannot run natively. However, the **AgentOS Kernel is fully OS-agnostic**. 
+
+You can bypass Docker entirely and boot the OS directly into the native Python runtime environment:
+
+```bash
+# 1. Install directly from PyPI (Coming soon!)
+pip install agentos
+
+# 2. Boot the native Kernel
+agentos
+```
+*Note: The native python deployment seamlessly maps the `~/.agentos/tools/` filesystem in your home directory to maintain structural consistency without container volumes.*
+
+---
+
 ## 🤝 Calling All Engineers (Contribute!)
 
 AgentOS is bleeding-edge. We are actively pushing the boundaries of what autonomous LLM swarms can do on bare-metal systems. 
