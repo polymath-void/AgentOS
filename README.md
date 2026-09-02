@@ -82,6 +82,24 @@ agentos
 
 ---
 
+## 🔌 Connecting your AI (The MCP Protocol)
+
+AgentOS natively exposes the **Model Context Protocol (FastMCP)** via standard input/output. This means you can plug AgentOS into any AI client (Claude Desktop, Cursor, Gemini, or custom swarms) by adding it to your `mcp_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "agentos": {
+      "command": "python3",
+      "args": ["/absolute/path/to/AgentOS/agentos/gateway/mcp_server.py"]
+    }
+  }
+}
+```
+*Note: Make sure the `agentos-kernel` daemon is running in the background to handle the ZeroMQ routing!*
+
+---
+
 ## 🤝 Calling All Engineers (Contribute!)
 
 AgentOS is bleeding-edge. We are actively pushing the boundaries of what autonomous LLM swarms can do on bare-metal systems. 

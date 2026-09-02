@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "agentos": {
+      "command": "python3",
+      "args": [
+        "/absolute/path/to/AgentOS/agentos/gateway/mcp_server.py"
+      ],
+      "env": {}
+    }
+  }
+}

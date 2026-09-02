@@ -1,0 +1,528 @@
+from libc.stdint cimport int64_t, uint8_t, uint16_t, uint32_t, uint64_t
+
+cdef extern from "libavutil/channel_layout.h" nogil:
+    ctypedef enum AVChannel:
+        AV_CHAN_NONE = -1
+        AV_CHAN_FRONT_LEFT
+        AV_CHAN_FRONT_RIGHT
+        AV_CHAN_FRONT_CENTER
+    ctypedef struct AVChannelLayout:
+        int nb_channels
+
+    int av_channel_layout_default(AVChannelLayout *ch_layout, int nb_channels)
+    int av_channel_layout_from_string(AVChannelLayout *channel_layout, const char *str)
+    int av_channel_layout_describe(const AVChannelLayout *channel_layout, char *buf, size_t buf_size)
+    int av_channel_name(char *buf, size_t buf_size, AVChannel channel_id)
+    int av_channel_description(char *buf, size_t buf_size, AVChannel channel_id)
+    int av_channel_layout_compare(AVChannelLayout *chl, AVChannelLayout *chl1)
+    AVChannel av_channel_layout_channel_from_index(AVChannelLayout *channel_layout, unsigned int idx)
+    void av_channel_layout_uninit(AVChannelLayout *channel_layout)
+
+cdef extern from "libavcodec/avcodec.h" nogil:
+    cdef int avcodec_version()
+    cdef char* avcodec_configuration()
+    cdef char* avcodec_license()
+
+    AVPixelFormat avcodec_find_best_pix_fmt_of_list(
+        const AVPixelFormat *pix_fmt_list,
+        AVPixelFormat src_pix_fmt,
+        int has_alpha,
+        int *loss_ptr,
+    )
+
+    cdef size_t AV_INPUT_BUFFER_PADDING_SIZE
+    cdef int64_t AV_NOPTS_VALUE
+
+    cdef enum:
+        AV_CODEC_PROP_INTRA_ONLY
+        AV_CODEC_PROP_LOSSY
+        AV_CODEC_PROP_LOSSLESS
+        AV_CODEC_PROP_REORDER
+        AV_CODEC_PROP_BITMAP_SUB
+        AV_CODEC_PROP_TEXT_SUB
+
+    cdef enum:
+        AV_CODEC_CAP_DRAW_HORIZ_BAND
+        AV_CODEC_CAP_DR1
+        AV_CODEC_CAP_DELAY
+        AV_CODEC_CAP_SMALL_LAST_FRAME
+        AV_CODEC_CAP_EXPERIMENTAL
+        AV_CODEC_CAP_CHANNEL_CONF
+        AV_CODEC_CAP_FRAME_THREADS
+        AV_CODEC_CAP_SLICE_THREADS
+        AV_CODEC_CAP_PARAM_CHANGE
+        AV_CODEC_CAP_OTHER_THREADS
+        AV_CODEC_CAP_VARIABLE_FRAME_SIZE
+        AV_CODEC_CAP_AVOID_PROBING
+        AV_CODEC_CAP_HARDWARE
+        AV_CODEC_CAP_HYBRID
+        AV_CODEC_CAP_ENCODER_REORDERED_OPAQUE
+
+    cdef enum:
+        AV_PROFILE_UNKNOWN = -99
+
+    cdef enum:
+        FF_THREAD_FRAME
+        FF_THREAD_SLICE
+
+    cdef enum:
+        AV_CODEC_FLAG_UNALIGNED
+        AV_CODEC_FLAG_QSCALE
+        AV_CODEC_FLAG_4MV
+        AV_CODEC_FLAG_OUTPUT_CORRUPT
+        AV_CODEC_FLAG_QPEL
+        AV_CODEC_FLAG_DROPCHANGED
+        AV_CODEC_FLAG_RECON_FRAME
+        AV_CODEC_FLAG_COPY_OPAQUE
+        AV_CODEC_FLAG_FRAME_DURATION
+        AV_CODEC_FLAG_PASS1
+        AV_CODEC_FLAG_PASS2
+        AV_CODEC_FLAG_LOOP_FILTER
+        AV_CODEC_FLAG_GRAY
+        AV_CODEC_FLAG_PSNR
+        AV_CODEC_FLAG_INTERLACED_DCT
+        AV_CODEC_FLAG_LOW_DELAY
+        AV_CODEC_FLAG_GLOBAL_HEADER
+        AV_CODEC_FLAG_BITEXACT
+        AV_CODEC_FLAG_AC_PRED
+        AV_CODEC_FLAG_INTERLACED_ME
+        AV_CODEC_FLAG_CLOSED_GOP
+
+    cdef enum:
+        AV_CODEC_FLAG2_FAST
+        AV_CODEC_FLAG2_NO_OUTPUT
+        AV_CODEC_FLAG2_LOCAL_HEADER
+        AV_CODEC_FLAG2_CHUNKS
+        AV_CODEC_FLAG2_IGNORE_CROP
+        AV_CODEC_FLAG2_SHOW_ALL
+        AV_CODEC_FLAG2_EXPORT_MVS
+        AV_CODEC_FLAG2_SKIP_MANUAL
+        AV_CODEC_FLAG2_RO_FLUSH_NOOP
+
+    cdef enum:
+        AV_PKT_FLAG_KEY
+        AV_PKT_FLAG_CORRUPT
+        AV_PKT_FLAG_DISCARD
+        AV_PKT_FLAG_TRUSTED
+        AV_PKT_FLAG_DISPOSABLE
+
+    cdef enum:
+        AV_FRAME_FLAG_CORRUPT
+        AV_FRAME_FLAG_KEY
+        AV_FRAME_FLAG_DISCARD
+        AV_FRAME_FLAG_INTERLACED
+
+    cdef enum:
+        FF_COMPLIANCE_VERY_STRICT
+        FF_COMPLIANCE_STRICT
+        FF_COMPLIANCE_NORMAL
+        FF_COMPLIANCE_UNOFFICIAL
+        FF_COMPLIANCE_EXPERIMENTAL
+
+    cdef enum AVCodecID:
+        AV_CODEC_ID_NONE
+        AV_CODEC_ID_MPEG2VIDEO
+        AV_CODEC_ID_MPEG1VIDEO
+        AV_CODEC_ID_PCM_ALAW
+        AV_CODEC_ID_PCM_BLURAY
+        AV_CODEC_ID_PCM_DVD
+        AV_CODEC_ID_PCM_F16LE
+        AV_CODEC_ID_PCM_F24LE
+        AV_CODEC_ID_PCM_F32BE
+        AV_CODEC_ID_PCM_F32LE
+        AV_CODEC_ID_PCM_F64BE
+        AV_CODEC_ID_PCM_F64LE
+        AV_CODEC_ID_PCM_LXF
+        AV_CODEC_ID_PCM_MULAW
+        AV_CODEC_ID_PCM_S16BE
+        AV_CODEC_ID_PCM_S16BE_PLANAR
+        AV_CODEC_ID_PCM_S16LE
+        AV_CODEC_ID_PCM_S16LE_PLANAR
+        AV_CODEC_ID_PCM_S24BE
+        AV_CODEC_ID_PCM_S24DAUD
+        AV_CODEC_ID_PCM_S24LE
+        AV_CODEC_ID_PCM_S24LE_PLANAR
+        AV_CODEC_ID_PCM_S32BE
+        AV_CODEC_ID_PCM_S32LE
+        AV_CODEC_ID_PCM_S32LE_PLANAR
+        AV_CODEC_ID_PCM_S64BE
+        AV_CODEC_ID_PCM_S64LE
+        AV_CODEC_ID_PCM_S8
+        AV_CODEC_ID_PCM_S8_PLANAR
+        AV_CODEC_ID_PCM_U16BE
+        AV_CODEC_ID_PCM_U16LE
+        AV_CODEC_ID_PCM_U24BE
+        AV_CODEC_ID_PCM_U24LE
+        AV_CODEC_ID_PCM_U32BE
+        AV_CODEC_ID_PCM_U32LE
+        AV_CODEC_ID_PCM_U8
+        AV_CODEC_ID_PCM_VIDC
+
+    cdef enum AVDiscard:
+        AVDISCARD_NONE
+        AVDISCARD_DEFAULT
+        AVDISCARD_NONREF
+        AVDISCARD_BIDIR
+        AVDISCARD_NONINTRA
+        AVDISCARD_NONKEY
+        AVDISCARD_ALL
+
+    cdef struct AVCodec:
+        char *name
+        char *long_name
+        AVMediaType type
+        AVCodecID id
+        int capabilities
+        AVClass *priv_class
+
+    cdef int av_codec_is_encoder(AVCodec*)
+    cdef int av_codec_is_decoder(AVCodec*)
+
+    cdef enum AVCodecConfig:
+        AV_CODEC_CONFIG_PIX_FORMAT
+        AV_CODEC_CONFIG_FRAME_RATE
+        AV_CODEC_CONFIG_SAMPLE_RATE
+        AV_CODEC_CONFIG_SAMPLE_FORMAT
+
+    cdef int avcodec_get_supported_config(
+        const AVCodecContext *avctx,
+        const AVCodec *codec,
+        AVCodecConfig config,
+        unsigned flags,
+        const void **out_configs,
+        int *out_num_configs,
+    )
+
+    cdef struct AVProfile:
+        int profile
+        char *name
+
+    cdef struct AVCodecDescriptor:
+        AVCodecID id
+        AVMediaType type
+        char *name
+        char *long_name
+        int props
+        char **mime_types
+        AVProfile *profiles
+
+    AVCodecDescriptor* avcodec_descriptor_get(AVCodecID)
+
+    cdef enum:
+        AV_CODEC_HW_CONFIG_METHOD_HW_DEVICE_CTX
+        AV_CODEC_HW_CONFIG_METHOD_HW_FRAMES_CTX
+        AV_CODEC_HW_CONFIG_METHOD_INTERNAL
+        AV_CODEC_HW_CONFIG_METHOD_AD_HOC
+
+    cdef struct AVCodecHWConfig:
+        AVPixelFormat pix_fmt
+        int methods
+        AVHWDeviceType device_type
+    cdef const AVCodecHWConfig* avcodec_get_hw_config(const AVCodec *codec, int index)
+    cdef struct AVHWAccel:
+        pass
+
+    cdef struct AVCodecContext:
+        AVClass *av_class
+
+        AVMediaType codec_type
+        AVCodec *codec
+        AVCodecID codec_id
+        unsigned int codec_tag
+
+        void* opaque
+
+        int bit_rate
+        int flags
+        int flags2
+        uint8_t *extradata
+        int extradata_size
+        AVRational time_base
+        AVRational pkt_timebase
+        AVRational framerate
+        int delay
+        int width
+        int height
+        int coded_width
+        int coded_height
+        AVRational sample_aspect_ratio
+        AVPixelFormat pix_fmt
+        AVPixelFormat sw_pix_fmt
+        AVColorPrimaries color_primaries
+        AVColorTransferCharacteristic color_trc
+        AVColorSpace colorspace
+        AVColorRange color_range
+
+        int has_b_frames
+        AVPixelFormat (*get_format)(AVCodecContext *s, const AVPixelFormat *fmt)
+        int max_b_frames
+        int mb_decision
+        int gop_size
+        int sample_rate
+        AVSampleFormat sample_fmt
+        AVChannelLayout ch_layout
+        int frame_size
+
+        int bit_rate_tolerance
+        int global_quality
+        int compression_level
+        int qmin
+        int qmax
+        int rc_buffer_size
+        int rc_max_rate
+        int rc_min_rate
+
+        AVHWAccel *hwaccel
+        AVBufferRef *hw_device_ctx
+
+        int thread_count
+        int thread_type
+        int bits_per_coded_sample
+        int profile
+        AVDiscard skip_frame
+
+        int subtitle_header_size
+        uint8_t *subtitle_header
+        int64_t frame_num
+
+    cdef AVCodecContext* avcodec_alloc_context3(const AVCodec *codec)
+    cdef void avcodec_free_context(AVCodecContext **ctx)
+    cdef AVClass* avcodec_get_class()
+    cdef const AVCodec* avcodec_find_decoder(AVCodecID id)
+    cdef const AVCodec* avcodec_find_encoder(AVCodecID id)
+    cdef const AVCodec* avcodec_find_decoder_by_name(char *name)
+    cdef const AVCodec* avcodec_find_encoder_by_name(char *name)
+    cdef const AVCodec* av_codec_iterate(void **opaque)
+    cdef const AVCodecDescriptor* avcodec_descriptor_get(AVCodecID id)
+    cdef const AVCodecDescriptor* avcodec_descriptor_get_by_name(char *name)
+    cdef char* avcodec_get_name(AVCodecID id)
+    cdef int avcodec_open2(AVCodecContext *ctx, const AVCodec *codec, AVDictionary **options)
+    cdef enum AVPacketSideDataType:
+        AV_PKT_DATA_DISPLAYMATRIX
+    cdef struct AVPacketSideData:
+        uint8_t *data
+        size_t size
+        AVPacketSideDataType type
+
+    cdef enum AVFrameSideDataType:
+        AV_FRAME_DATA_PANSCAN
+        AV_FRAME_DATA_A53_CC
+        AV_FRAME_DATA_STEREO3D
+        AV_FRAME_DATA_MATRIXENCODING
+        AV_FRAME_DATA_DOWNMIX_INFO
+        AV_FRAME_DATA_REPLAYGAIN
+        AV_FRAME_DATA_DISPLAYMATRIX
+        AV_FRAME_DATA_AFD
+        AV_FRAME_DATA_MOTION_VECTORS
+        AV_FRAME_DATA_SKIP_SAMPLES
+        AV_FRAME_DATA_AUDIO_SERVICE_TYPE
+        AV_FRAME_DATA_MASTERING_DISPLAY_METADATA
+        AV_FRAME_DATA_GOP_TIMECODE
+        AV_FRAME_DATA_SPHERICAL
+        AV_FRAME_DATA_CONTENT_LIGHT_LEVEL
+        AV_FRAME_DATA_ICC_PROFILE
+        AV_FRAME_DATA_S12M_TIMECODE
+        AV_FRAME_DATA_DYNAMIC_HDR_PLUS
+        AV_FRAME_DATA_REGIONS_OF_INTEREST
+        AV_FRAME_DATA_VIDEO_ENC_PARAMS
+        AV_FRAME_DATA_SEI_UNREGISTERED
+        AV_FRAME_DATA_FILM_GRAIN_PARAMS
+        AV_FRAME_DATA_DETECTION_BBOXES
+        AV_FRAME_DATA_DOVI_RPU_BUFFER
+        AV_FRAME_DATA_DOVI_METADATA
+        AV_FRAME_DATA_DYNAMIC_HDR_VIVID
+        AV_FRAME_DATA_AMBIENT_VIEWING_ENVIRONMENT
+        AV_FRAME_DATA_VIDEO_HINT
+
+    cdef struct AVFrameSideData:
+        AVFrameSideDataType type
+        uint8_t *data
+        int size
+        AVDictionary *metadata
+
+    # See: http://ffmpeg.org/doxygen/trunk/structAVFrame.html
+    cdef struct AVFrame:
+        uint8_t *data[4]
+        int linesize[4]
+        uint8_t **extended_data
+        int width
+        int height
+        int nb_samples
+        int format  # -1 if unknown, AVPixelFormat or AVSampleFormat
+        AVPictureType pict_type
+
+        int64_t pts
+        int64_t pkt_dts
+        void *opaque
+        int sample_rate
+        AVBufferRef *buf[8]
+
+        AVFrameSideData **side_data
+        int nb_side_data
+        int flags
+        AVColorRange color_range
+        AVColorPrimaries color_primaries
+        AVColorTransferCharacteristic color_trc
+        AVColorSpace colorspace
+
+        AVDictionary *metadata
+        int decode_error_flags
+
+        AVBufferRef *hw_frames_ctx
+        AVBufferRef *opaque_ref
+        AVChannelLayout ch_layout
+        int64_t duration
+
+    cdef struct AVPacket:
+        void *buf
+        int64_t pts
+        int64_t dts
+        uint8_t *data
+        int size
+        int stream_index
+        int flags
+        AVPacketSideData *side_data
+        int side_data_elems
+        int64_t duration
+        int64_t pos
+        void *opaque
+        AVBufferRef *opaque_ref
+        AVRational time_base
+
+    cdef int avcodec_fill_audio_frame(
+        AVFrame *frame,
+        int nb_channels,
+        AVSampleFormat sample_fmt,
+        uint8_t *buf,
+        int buf_size,
+        int align
+    )
+    cdef AVPacket* av_packet_alloc()
+    cdef void av_packet_free(AVPacket **)
+    cdef int av_new_packet(AVPacket*, int)
+    cdef int av_packet_ref(AVPacket *dst, const AVPacket *src)
+    cdef void av_packet_unref(AVPacket *pkt)
+    cdef void av_packet_move_ref(AVPacket *dst, AVPacket *src)
+    cdef void av_packet_rescale_ts(AVPacket *pkt, AVRational src_tb, AVRational dst_tb)
+
+    cdef enum AVSubtitleType:
+        SUBTITLE_NONE
+        SUBTITLE_BITMAP
+        SUBTITLE_TEXT
+        SUBTITLE_ASS
+
+    cdef struct AVSubtitleRect:
+        int x
+        int y
+        int w
+        int h
+        int nb_colors
+        uint8_t *data[4]
+        int linesize[4]
+        AVSubtitleType type
+        char *text
+        char *ass
+        int flags
+
+    cdef struct AVSubtitle:
+        uint16_t format
+        uint32_t start_display_time
+        uint32_t end_display_time
+        unsigned int num_rects
+        AVSubtitleRect **rects
+        int64_t pts
+
+    cdef int avcodec_decode_subtitle2(
+        AVCodecContext *ctx, AVSubtitle *sub, int *done, AVPacket *pkt,
+    )
+    cdef int avcodec_encode_subtitle(
+        AVCodecContext *avctx, uint8_t *buf, int buf_size, AVSubtitle *sub
+    )
+    cdef void avsubtitle_free(AVSubtitle*)
+    cdef void avcodec_flush_buffers(AVCodecContext *ctx)
+    cdef int avcodec_send_packet(AVCodecContext *avctx, AVPacket *packet)
+    cdef int avcodec_receive_frame(AVCodecContext *avctx, AVFrame *frame)
+    cdef int avcodec_send_frame(AVCodecContext *avctx, AVFrame *frame)
+    cdef int avcodec_receive_packet(AVCodecContext *avctx, AVPacket *avpkt)
+
+    cdef struct AVCodecParser:
+        int codec_ids[5]
+
+    cdef struct AVCodecParserContext:
+        int64_t pts
+        int64_t dts
+        int64_t pos
+        int64_t last_pos
+        int64_t offset
+        int duration
+        int key_frame
+
+    cdef AVCodecParserContext *av_parser_init(int codec_id)
+    cdef int av_parser_parse2(
+        AVCodecParserContext *s,
+        AVCodecContext *avctx,
+        uint8_t **poutbuf, int *poutbuf_size,
+        const uint8_t *buf, int buf_size,
+        int64_t pts, int64_t dts,
+        int64_t pos
+    )
+    cdef void av_parser_close(AVCodecParserContext *s)
+
+    cdef struct AVCodecParameters:
+        AVMediaType codec_type
+        AVCodecID codec_id
+        uint8_t *extradata
+        int extradata_size
+        int width
+        int height
+        int sample_rate
+        AVPacketSideData *coded_side_data
+        int nb_coded_side_data
+
+    cdef int avcodec_parameters_copy(
+        AVCodecParameters *dst, const AVCodecParameters *src
+    )
+    cdef int avcodec_parameters_from_context(
+        AVCodecParameters *par, const AVCodecContext *codec
+    )
+    cdef int avcodec_parameters_to_context(
+        AVCodecContext *codec, const AVCodecParameters *par
+    )
+
+
+cdef extern from "libavcodec/bsf.h" nogil:
+    cdef struct AVBitStreamFilter:
+        const char *name
+        AVCodecID *codec_ids
+
+    cdef struct AVCodecParameters:
+        pass
+
+    cdef struct AVBSFContext:
+        const AVBitStreamFilter *filter
+        const AVCodecParameters *par_in
+        const AVCodecParameters *par_out
+
+    cdef int av_bsf_list_parse_str(const char *str, AVBSFContext **bsf)
+    cdef int av_bsf_init(AVBSFContext *ctx)
+    cdef void av_bsf_free(AVBSFContext **ctx)
+    cdef AVBitStreamFilter* av_bsf_iterate(void **opaque)
+    cdef int av_bsf_send_packet(AVBSFContext *ctx, AVPacket *pkt)
+    cdef int av_bsf_receive_packet(AVBSFContext *ctx, AVPacket *pkt)
+    cdef void av_bsf_flush(AVBSFContext *ctx)
+
+cdef extern from "libavcodec/packet.h" nogil:
+    const AVPacketSideData *av_packet_side_data_get(
+        const AVPacketSideData *sd, int nb_sd, AVPacketSideDataType type
+    )
+    AVPacketSideData *av_packet_side_data_new(
+        AVPacketSideData **psd, int *pnb_sd,
+        AVPacketSideDataType type, size_t size, int flags
+    )
+    uint8_t* av_packet_get_side_data(
+        const AVPacket *pkt, AVPacketSideDataType type, size_t *size
+    )
+    int av_packet_add_side_data(
+        AVPacket *pkt, AVPacketSideDataType type, uint8_t *data, size_t size
+    )
+    const char *av_packet_side_data_name(AVPacketSideDataType type)
