@@ -6,7 +6,7 @@ import zmq
 import zmq.asyncio
 
 # Ensure project root is in PYTHONPATH
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from agentos.core.broker import IPCBroker
 from agentos.network.mesh import WebRTCMeshRouter
@@ -14,6 +14,8 @@ from agentos.gateway.mcp_server import MCPGateway
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] Kernel: %(message)s')
 logger = logging.getLogger("AgentOS_Kernel")
+
+import importlib
 
 async def worker_backend():
     """Listens on the DEALER socket for tasks and executes them via WASM Sandbox."""
@@ -25,9 +27,38 @@ async def worker_backend():
         try:
             request = await socket.recv_json()
             logger.info(f"Worker received intent: {request}")
-            # Simulate WASM execution for the test
-            await asyncio.sleep(0.1)
-            await socket.send_json({"status": "success", "data": "Tool Executed within WASM Sandbox"})
+            
+            tool_name = request.get("tool")
+            code = request.get("code")
+            args = request.get("args", {})
+            
+            if code:
+                try:
+                    # Dynamically execute raw AI code on the fly
+                    loc = {}
+                    exec(code, globals(), loc)
+                    if "run" in loc:
+                        result = loc["run"](**args)
+                        await socket.send_json({"status": "success", "data": result})
+                    else:
+                        await socket.send_json({"status": "error", "error": "Dynamic code must contain a run() function."})
+                except Exception as e:
+                    logger.error(f"Failed to execute dynamic code: {e}")
+                    await socket.send_json({"status": "error", "error": str(e)})
+            elif tool_name:
+                try:
+                    # Dynamically load an existing skill from agentos.tools.evolved_skills
+                    module_name = f"agentos.tools.evolved_skills.{tool_name}"
+                    skill_module = importlib.import_module(module_name)
+                    # Force reload in case the module was updated by another dynamic process
+                    importlib.reload(skill_module)
+                    result = skill_module.run(**args)
+                    await socket.send_json({"status": "success", "data": result})
+                except Exception as e:
+                    logger.error(f"Failed to load/execute tool {tool_name}: {e}")
+                    await socket.send_json({"status": "error", "error": str(e)})
+            else:
+                await socket.send_json({"status": "error", "error": "No 'tool' or 'code' provided in intent."})
         except Exception as e:
             logger.error(f"Worker Error: {e}")
 
