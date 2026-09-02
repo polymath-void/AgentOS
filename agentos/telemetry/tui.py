@@ -43,14 +43,32 @@ class AgentNodeWidget(Static):
         self.ascii_art = ascii_art
 
     def render(self) -> str:
-        # A sleek, RPG-styled text box in the head
-        box_width = 42
-        padded_text = self.dialogue.ljust(box_width)
-        # Ensure we truncate if too long
-        if len(padded_text) > box_width:
-            padded_text = padded_text[:box_width - 3] + "..."
+        # A sleek, dynamically resizing RPG-styled text box in the head
+        max_width = 38
+        
+        # Word wrap the text if it's too long
+        words = self.dialogue.split(" ")
+        lines = []
+        current_line = ""
+        for word in words:
+            if len(current_line) + len(word) + 1 <= max_width:
+                current_line += (word + " ")
+            else:
+                lines.append(current_line.strip())
+                current_line = word + " "
+        if current_line:
+            lines.append(current_line.strip())
             
-        box = f"╭{'─' * (box_width+2)}╮\n│ {padded_text} │\n╰{'─' * (box_width+2)}╯"
+        longest_line = max(len(line) for line in lines) if lines else 0
+        
+        # Build the dynamic box
+        box = f"╭{'─' * (longest_line + 2)}╮\n"
+        for line in lines:
+            padded_line = line.ljust(longest_line)
+            box += f"│ {padded_line} │\n"
+        box += f"╰{'─' * (longest_line + 2)}╯"
+        
+        # The speech bubble pointer
         bubble = "      \\\n       \\_"
         art_colored = f"[{self.color}]{self.ascii_art}[/{self.color}]"
         
