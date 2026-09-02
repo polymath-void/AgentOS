@@ -24,6 +24,11 @@ class Agent:
         self.target_x_pct = x_pct
         self.target_y_pct = y_pct
         self.dialogue = "Awaiting intent..."
+        self.status = "idle"
+
+    def get_display(self) -> str:
+        emojis = {"idle": "💤", "working": "⠷", "speaking": "💬", "tool": "🛠️"}
+        return f"[bold {self.color}]{self.symbol}[/bold {self.color}]{emojis.get(self.status, '')}"
 
     def move(self, speed: float) -> bool:
         dx = self.target_x_pct - self.x_pct
@@ -41,9 +46,10 @@ class OfficeMap(Static):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         # Initialize agents (positions as percentages 0.0-1.0)
-        self.claude = Agent("Claude (Architect)", "C", "red", 0.5, 0.5)
-        self.gemini = Agent("Gemini (Memory Vectorizer)", "G", "blue", 0.55, 0.5)
+        self.claude = Agent("Claude (Architect)", "C", "red", 0.2, 0.25)
+        self.gemini = Agent("Gemini (Memory Vectorizer)", "G", "blue", 0.8, 0.75)
         self.agents_list = [self.claude, self.gemini]
+        self.draw_collab_line = False
         
         # Start movement loop
         self.update_timer = self.set_interval(1 / 60, self.tick)
@@ -98,22 +104,71 @@ class OfficeMap(Static):
                 if s_x1 < grid_width: grid[dy][s_x1] = '[cyan]█[/cyan]'
                 if s_x2 < grid_width: grid[dy][s_x2] = '[cyan]█[/cyan]'
 
+        # Draw Meeting Pod (Center of the room)
+        mp_x1, mp_x2 = int(0.40 * grid_width), int(0.60 * grid_width)
+        mp_y1, mp_y2 = int(0.40 * grid_height), int(0.60 * grid_height)
+        if mp_x2 > mp_x1 and mp_y2 > mp_y1:
+            if mp_y1 < grid_height: grid[mp_y1][mp_x1:mp_x2+1] = ['[magenta]─[/magenta]'] * (mp_x2 - mp_x1 + 1)
+            if mp_y2 < grid_height: grid[mp_y2][mp_x1:mp_x2+1] = ['[magenta]─[/magenta]'] * (mp_x2 - mp_x1 + 1)
+            for dy in range(mp_y1, mp_y2 + 1):
+                if dy < grid_height:
+                    grid[dy][mp_x1] = '[magenta]│[/magenta]'
+                    grid[dy][mp_x2] = '[magenta]│[/magenta]'
+            if mp_y1 < grid_height: 
+                grid[mp_y1][mp_x1] = '[magenta]╭[/magenta]'
+                grid[mp_y1][mp_x2] = '[magenta]╮[/magenta]'
+            if mp_y2 < grid_height:
+                grid[mp_y2][mp_x1] = '[magenta]╰[/magenta]'
+                grid[mp_y2][mp_x2] = '[magenta]╯[/magenta]'
+
+        # Draw Collaboration Lines (Bresenham)
+        if self.draw_collab_line:
+            x0 = int(round(self.claude.x_pct * grid_width))
+            y0 = int(round(self.claude.y_pct * grid_height))
+            x1 = int(round(self.gemini.x_pct * grid_width))
+            y1 = int(round(self.gemini.y_pct * grid_height))
+            
+            dx = abs(x1 - x0)
+            dy = abs(y1 - y0)
+            sx = 1 if x0 < x1 else -1
+            sy = 1 if y0 < y1 else -1
+            err = dx - dy
+            
+            while True:
+                if 0 <= x0 < grid_width and 0 <= y0 < grid_height:
+                    # don't overwrite walls or desks or meeting pod walls
+                    cell = grid[y0][x0]
+                    if '·' in cell or ' ' in cell:
+                        grid[y0][x0] = '[green]┈[/green]'
+                if x0 == x1 and y0 == y1:
+                    break
+                e2 = 2 * err
+                if e2 > -dy:
+                    err -= dy
+                    x0 += sx
+                if e2 < dx:
+                    err += dx
+                    y0 += sy
+
         # Overlay Agents
         dialogues = []
         for agent in self.agents_list:
             ax = int(round(agent.x_pct * grid_width))
             ay = int(round(agent.y_pct * grid_height))
-            # Keep within bounds
-            ax = max(1, min(grid_width - 2, ax))
+            # Keep within bounds and avoid clipping the right edge due to emoji width
+            ax = max(1, min(grid_width - 3, ax))
             ay = max(1, min(grid_height - 2, ay))
             
-            grid[ay][ax] = f"[bold {agent.color}]{agent.symbol}[/bold {agent.color}]"
+            grid[ay][ax] = agent.get_display()
+            # Clear the adjacent cell to compensate for double-width emoji rendering in terminal
+            if ax + 1 < grid_width:
+                grid[ay][ax + 1] = ''
             
             if agent.dialogue:
                 dialogues.append(f"[{agent.color}]{agent.name}[/{agent.color}]: {agent.dialogue}")
 
         # Render rows
-        lines = ["".join(grid[y]) for y in range(grid_height)]
+        lines = ["".join(filter(None, grid[y])) for y in range(grid_height)]
             
         map_str = "\n".join(lines)
         if dialogues:
@@ -250,26 +305,35 @@ class AgentOSTelemetryApp(App):
                     # Process Intent & Move Agents
                     code_str = intent.get("code", "")
                     if "summit" in code_str.lower() or "claude" in code_str.lower():
-                        self.office_map.claude.target_x_pct = 0.20
-                        self.office_map.claude.target_y_pct = 0.25
+                        self.office_map.claude.target_x_pct = 0.45
+                        self.office_map.claude.target_y_pct = 0.50
+                        self.office_map.claude.status = "working"
                         self.office_map.claude.dialogue = "Processing remote Summit Payload via WebRTC!"
                         self.office_map.gemini.target_x_pct = 0.55
                         self.office_map.gemini.target_y_pct = 0.50
+                        self.office_map.gemini.status = "idle"
                         self.office_map.gemini.dialogue = "Monitoring background channels."
+                        self.office_map.draw_collab_line = True
                     elif "weather" in code_str.lower():
                         self.office_map.gemini.target_x_pct = 0.80
                         self.office_map.gemini.target_y_pct = 0.75
+                        self.office_map.gemini.status = "tool"
                         self.office_map.gemini.dialogue = "Executing external API Fetch via WASM Sandbox!"
-                        self.office_map.claude.target_x_pct = 0.50
-                        self.office_map.claude.target_y_pct = 0.50
-                        self.office_map.claude.dialogue = "Waiting for data vectorization."
-                    else:
                         self.office_map.claude.target_x_pct = 0.20
                         self.office_map.claude.target_y_pct = 0.25
+                        self.office_map.claude.status = "idle"
+                        self.office_map.claude.dialogue = "Waiting for data vectorization."
+                        self.office_map.draw_collab_line = False
+                    else:
+                        self.office_map.claude.target_x_pct = 0.45
+                        self.office_map.claude.target_y_pct = 0.50
+                        self.office_map.claude.status = "speaking"
                         self.office_map.claude.dialogue = "Analyzing intent AST signature..."
-                        self.office_map.gemini.target_x_pct = 0.80
-                        self.office_map.gemini.target_y_pct = 0.75
+                        self.office_map.gemini.target_x_pct = 0.55
+                        self.office_map.gemini.target_y_pct = 0.50
+                        self.office_map.gemini.status = "speaking"
                         self.office_map.gemini.dialogue = "Vectorizing outcome into Hyperbolic space..."
+                        self.office_map.draw_collab_line = True
                         
                     # Request map redraw
                     self.office_map.refresh()
@@ -282,13 +346,16 @@ class AgentOSTelemetryApp(App):
                     
                     # Revert dialog and return agents to center if idle
                     if random.random() > 0.8:
-                        self.office_map.claude.target_x_pct = 0.50
-                        self.office_map.claude.target_y_pct = 0.50
+                        self.office_map.claude.target_x_pct = 0.20
+                        self.office_map.claude.target_y_pct = 0.25
+                        self.office_map.claude.status = "idle"
                         self.office_map.claude.dialogue = "Awaiting intent..."
                         
-                        self.office_map.gemini.target_x_pct = 0.55
-                        self.office_map.gemini.target_y_pct = 0.50
+                        self.office_map.gemini.target_x_pct = 0.80
+                        self.office_map.gemini.target_y_pct = 0.75
+                        self.office_map.gemini.status = "idle"
                         self.office_map.gemini.dialogue = "Awaiting intent..."
+                        self.office_map.draw_collab_line = False
                         
                         self.office_map.refresh()
 
