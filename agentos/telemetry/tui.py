@@ -65,7 +65,7 @@ class AgentCard(Static):
             f"[bold {self.color}]{self.icon} {self.agent_name}[/bold {self.color}]  "
             f"[dim]({self.role})[/dim]\n"
             f"Status: {badge}  │  Interactions: [bold white]{self.interaction_count}[/bold white]\n"
-            f"Active Intent: [italic]{self.active_task[:40]}[/italic]"
+            f"Active Intent: [italic]{self.active_task[:38]}[/italic]"
         )
 
 
@@ -144,27 +144,37 @@ class DashboardApp(App):
         padding: 1 2;
     }
 
-    /* Dynamic Interacted Agents Area */
+    /* Dynamic Virtual Office Grid Box */
     .agents_section_title {
         margin: 1 1 0 1;
         text-style: bold;
-        color: #F0F6FC;
+        color: #38BDF8;
     }
 
-    #active_agents_container {
+    #active_agents_grid_box {
+        layout: grid;
+        grid-size: 2 2;
+        grid-gutter: 1;
         height: 12;
         margin: 0 1 1 1;
         padding: 1;
-        border: round #30363D;
+        border: round #38BDF8;
         background: #0D1117;
+    }
+
+    #empty_placeholder {
+        column-span: 2;
+        row-span: 2;
+        content-align: center middle;
+        color: #8B949E;
+        text-style: italic;
     }
 
     AgentCard {
         background: #161B22;
         border: round #30363D;
         padding: 1 2;
-        margin-bottom: 1;
-        height: 5;
+        height: 100%;
     }
 
     /* Bottom Log & Dialogue Section */
@@ -237,10 +247,14 @@ class DashboardApp(App):
                         self.db_card = HyperbolicDBCard()
                         yield self.db_card
 
-                    # Middle: Dynamic Interacted Agents View
-                    yield Static("👥 [bold]Interacted Swarm Agents[/bold] (Dynamically Rendered)", classes="agents_section_title")
-                    self.agents_container = Vertical(id="active_agents_container")
-                    yield self.agents_container
+                    # Middle: Office Floor Grid Box (Dynamic)
+                    yield Static("🏢 [bold #38BDF8]Virtual Office Grid Box[/bold #38BDF8] (Dynamically Displays Interacted Agents Only)", classes="agents_section_title")
+                    with Container(id="active_agents_grid_box"):
+                        self.placeholder = Label(
+                            "⚡ No agents interacted yet.\nListening on ZeroMQ telemetry... Cards appear dynamically as agents join tasks.",
+                            id="empty_placeholder"
+                        )
+                        yield self.placeholder
 
                     # Bottom Split Logs
                     with Horizontal(classes="bottom_section"):
@@ -285,15 +299,14 @@ class DashboardApp(App):
         self.tools_table.add_columns("Tool / Skill Name", "Category", "Target Handler", "Status")
         self.populate_registered_tools()
 
-        # Render initial placeholder state or first interacted agent
+        # Render initial logs
         self.dialogue_log.write("[bold #4ADE80][System][/bold #4ADE80] AgentOS Telemetry Dashboard Online.\n")
-        self.dialogue_log.write("[bold #38BDF8][Info][/bold #38BDF8] Listening for dynamic agent interactions on ZMQ tcp://127.0.0.1:5562\n")
+        self.dialogue_log.write("[bold #38BDF8][Info][/bold #38BDF8] Office Grid Box initialized. Awaiting real-time telemetry on ZMQ tcp://127.0.0.1:5562\n")
 
         self.mermaid_preview.write("```mermaid\ngraph TD;\n    A[Dynamic Intent] --> B(ZeroMQ IPC Broker);\n    B --> C{WASM Capability Guard};\n    C -->|Verified| D[Hyperbolic Vector DB];\n    C -->|Mutate| E[CRDT AST File Layer];\n```")
 
-        # Automatically show initial interacted agents (Claude & Gemini)
-        await self.register_agent_interaction("Claude", "IDLE", "Initialized Architect Engine")
-        await self.register_agent_interaction("Gemini", "IDLE", "Initialized Vector Memory")
+        # NOTE: NO PRE-MOUNTED CARDS ON STARTUP!
+        # Office Grid Box starts completely empty until ZMQ receives active agent intents!
 
         # Start ZMQ background telemetry listener worker
         self.run_worker(self.listen_swarm_telemetry(), exclusive=True)
@@ -314,9 +327,14 @@ class DashboardApp(App):
             self.tools_table.add_row(*item)
 
     async def register_agent_interaction(self, name: str, status: str, task: str) -> None:
-        """Dynamically add or update an interacted agent card in the Virtual Office view."""
-        # Find existing card or create new one dynamically
-        cards = self.agents_container.query(AgentCard)
+        """Dynamically add or update an interacted agent card inside the Office Grid Box."""
+        grid_box = self.query_one("#active_agents_grid_box", Container)
+
+        # Remove empty placeholder if present
+        if hasattr(self, 'placeholder') and self.placeholder and self.placeholder.parent:
+            await self.placeholder.remove()
+
+        cards = grid_box.query(AgentCard)
         target_card = None
         for card in cards:
             if card.agent_name == name:
@@ -324,9 +342,9 @@ class DashboardApp(App):
                 break
 
         if not target_card:
-            # Dynamically instantiate and mount new interacted agent card
+            # Dynamically instantiate and mount new interacted agent card inside the Grid Box
             target_card = AgentCard(name)
-            await self.agents_container.mount(target_card)
+            await grid_box.mount(target_card)
 
         # Update card reactive attributes
         target_card.agent_status = status
@@ -401,7 +419,8 @@ class DashboardApp(App):
                 else:
                     # Ambient state update
                     if random.random() > 0.8:
-                        cards = self.agents_container.query(AgentCard)
+                        grid_box = self.query_one("#active_agents_grid_box", Container)
+                        cards = grid_box.query(AgentCard)
                         for card in cards:
                             card.agent_status = "IDLE"
 
