@@ -41,8 +41,8 @@ By locking the architecture to `python:3.10-slim-bullseye`, we guarantee the res
 
 ```bash
 # 1. Clone the Matrix
-git clone https://github.com/polymath-void/AgentOS-mcp-server.git
-cd AgentOS-mcp-server
+git clone https://github.com/polymath-void/AgentOS.git
+cd AgentOS
 
 # 2. Build the OS (Takes < 15 seconds)
 docker build -t agentos-core .
