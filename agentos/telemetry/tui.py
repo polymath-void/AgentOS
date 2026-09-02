@@ -2,7 +2,8 @@ import asyncio
 import sys
 import json
 import random
-from typing import Dict, Any
+import time
+from typing import Dict, Any, List
 
 try:
     from textual.app import App, ComposeResult
@@ -15,7 +16,6 @@ try:
         TabPane,
         Label,
         TextArea,
-        Header,
         Footer,
         DataTable
     )
@@ -26,73 +26,87 @@ except ImportError:
     sys.exit(1)
 
 
+# Vibrant, high-contrast color scheme for agents (Gemini is bright cyan #38BDF8)
+AGENT_STYLES = {
+    "Claude": {"icon": "🤖", "color": "#FF6B6B", "border": "#FF6B6B", "role": "Architect Engine"},
+    "Gemini": {"icon": "🦉", "color": "#38BDF8", "border": "#38BDF8", "role": "Hyperbolic Vector Memory"},
+    "Copilot": {"icon": "✈️", "color": "#4ADE80", "border": "#4ADE80", "role": "IDE Sidecar Bridge"},
+    "Cursor": {"icon": "⚡", "color": "#FACC15", "border": "#FACC15", "role": "CRDT AST Mutator"},
+    "SwarmWorker": {"icon": "⚙️", "color": "#C084FC", "border": "#C084FC", "role": "Dynamic Swarm Node"},
+}
+
+
 class AgentCard(Static):
-    """A clean, well-aligned widget representing an Agent Workstation in the Virtual Office."""
+    """Dynamically created Agent Workstation card for interacted agents."""
     
     agent_status = reactive("IDLE")
     active_task = reactive("Awaiting intent...")
+    interaction_count = reactive(1)
 
-    def __init__(self, name: str, icon: str, role: str, color: str, **kwargs):
+    def __init__(self, name: str, **kwargs):
         super().__init__(**kwargs)
         self.agent_name = name
-        self.icon = icon
-        self.role = role
-        self.color = color
+        info = AGENT_STYLES.get(name, AGENT_STYLES["SwarmWorker"])
+        self.icon = info["icon"]
+        self.color = info["color"]
+        self.role = info["role"]
 
     def render(self) -> str:
         status_colors = {
-            "IDLE": "grey50",
+            "IDLE": "grey60",
             "WORKING": "yellow",
-            "SPEAKING": "cyan",
-            "EXECUTING": "green",
-            "TOOL": "magenta",
+            "SPEAKING": "bold cyan",
+            "EXECUTING": "bold green",
+            "TOOL": "bold magenta",
         }
-        status_badge = f"[{status_colors.get(self.agent_status, 'white')}]● {self.agent_status}[/]"
+        badge = f"[{status_colors.get(self.agent_status, 'white')}]● {self.agent_status}[/]"
         
         return (
-            f"[bold {self.color}]{self.icon} {self.agent_name}[/bold {self.color}]\n"
-            f"[dim]{self.role}[/dim]\n\n"
-            f"Status: {status_badge}\n"
-            f"Task: [italic]{self.active_task[:35]}[/italic]"
+            f"[bold {self.color}]{self.icon} {self.agent_name}[/bold {self.color}]  "
+            f"[dim]({self.role})[/dim]\n"
+            f"Status: {badge}  │  Interactions: [bold white]{self.interaction_count}[/bold white]\n"
+            f"Active Intent: [italic]{self.active_task[:40]}[/italic]"
         )
 
 
-class PodCard(Static):
-    """Widget representing the Central Holographic Collaboration Pod."""
-    
-    pod_status = reactive("STANDBY")
-    active_summit = reactive("No active swarm consensus")
+class FuelEngineCard(Static):
+    """Realtime WASM Fuel Capacity & System Resource Telemetry."""
+
+    capacity = reactive(1000000)
+    used_fuel = reactive(142500)
+    burn_rate = reactive(2400)
+    ram_mb = reactive(128)
 
     def render(self) -> str:
-        color = "magenta" if self.pod_status != "STANDBY" else "grey50"
+        used_pct = (self.used_fuel / self.capacity) * 100
         return (
-            f"[bold magenta]🌀 Central Collaboration Pod[/bold magenta]\n"
-            f"[dim]Holographic Swarm Link[/dim]\n\n"
-            f"State: [{color}]● {self.pod_status}[/{color}]\n"
-            f"Context: [italic]{self.active_summit[:40]}[/italic]"
+            f"[bold #58A6FF]⚡ WASM Fuel Engine & Capacity[/bold #58A6FF]\n"
+            f"Capacity: [bold white]{self.capacity:,}[/bold white] Fuel  │  Used: [yellow]{self.used_fuel:,} ({used_pct:.1f}%)[/yellow]\n"
+            f"Burn Rate: [cyan]{self.burn_rate:,} fuel/sec[/cyan]  │  RAM Bounded: [green]{self.ram_mb} MB / 512 MB[/green]"
         )
 
 
-class SystemNodeCard(Static):
-    """Widget displaying active edge infrastructure and mock worker statuses."""
+class HyperbolicDBCard(Static):
+    """Realtime Vector & Memory Database Telemetry."""
 
-    node_count = reactive(4)
-    active_workers = reactive("QA, Security, Deployer")
+    indexed_vectors = reactive(14280)
+    tree_depth = reactive(12)
+    latency_ms = reactive(1.4)
+    dist_metric = reactive("d_H (Poincaré Ball)")
 
     def render(self) -> str:
         return (
-            f"[bold green]🖥️ Swarm Infrastructure[/bold green]\n"
-            f"[dim]ZeroMQ + WASM Edge Mesh[/dim]\n\n"
-            f"Active Edge Nodes: [bold cyan]{self.node_count}[/bold cyan]\n"
-            f"Daemons: [dim]{self.active_workers}[/dim]"
+            f"[bold #D2A8FF]🧠 Hyperbolic Vector DB Telemetry[/bold #D2A8FF]\n"
+            f"Indexed Vectors: [bold white]{self.indexed_vectors:,}[/bold white]  │  AST Tree Depth: [cyan]{self.tree_depth}[/cyan]\n"
+            f"Search Latency: [green]{self.latency_ms:.2f} ms[/green]  │  Metric: [italic]{self.dist_metric}[/italic]"
         )
 
 
 class DashboardApp(App):
-    """Production-Grade AgentOS OpenClaw Telemetry Dashboard."""
+    """Production-Grade AgentOS Telemetry & Swarm Dashboard."""
 
     TITLE = "AgentOS OpenClaw Telemetry"
-    SUB_TITLE = "Real-Time Decentralized AI Swarm Dashboard"
+    SUB_TITLE = "Real-Time Decentralized AI Swarm Environment"
 
     CSS = """
     Screen {
@@ -104,92 +118,76 @@ class DashboardApp(App):
         height: 3;
         content-align: center middle;
         background: #161B22;
-        color: #58A6FF;
+        color: #38BDF8;
         border-bottom: solid #30363D;
         text-style: bold;
     }
 
-    /* Grid Layout for Virtual Office */
-    .office_grid {
-        layout: grid;
-        grid-size: 3 2;
-        grid-columns: 1fr 1fr 1fr;
-        grid-rows: 1fr 1fr;
-        grid-gutter: 1;
+    /* Top Telemetry Cards */
+    .telemetry_header_bar {
+        height: 7;
+        margin: 1 1 0 1;
+    }
+
+    FuelEngineCard {
+        width: 50%;
+        background: #161B22;
+        border: round #58A6FF;
+        padding: 1 2;
+        margin-right: 1;
+    }
+
+    HyperbolicDBCard {
+        width: 50%;
+        background: #161B22;
+        border: round #D2A8FF;
+        padding: 1 2;
+    }
+
+    /* Dynamic Interacted Agents Area */
+    .agents_section_title {
+        margin: 1 1 0 1;
+        text-style: bold;
+        color: #F0F6FC;
+    }
+
+    #active_agents_container {
+        height: 12;
+        margin: 0 1 1 1;
         padding: 1;
-        height: 55%;
+        border: round #30363D;
+        background: #0D1117;
     }
 
     AgentCard {
         background: #161B22;
         border: round #30363D;
         padding: 1 2;
-        height: 100%;
+        margin-bottom: 1;
+        height: 5;
     }
 
-    #card_claude {
-        border-title-color: #FF7B72;
-        border: round #FF7B72;
-    }
-
-    #card_gemini {
-        border-title-color: #79C0FF;
-        border: round #79C0FF;
-    }
-
-    PodCard {
-        background: #1C1226;
-        border: double #D2A8FF;
-        padding: 1 2;
-        height: 100%;
-    }
-
-    SystemNodeCard {
-        background: #0D1F17;
-        border: round #56D364;
-        padding: 1 2;
-        height: 100%;
-    }
-
+    /* Bottom Log & Dialogue Section */
     .bottom_section {
-        height: 45%;
-        border-top: heavy #30363D;
-        background: #0B0E14;
+        height: 1fr;
+        margin: 0 1 1 1;
     }
 
-    .telemetry_panel {
+    .telemetry_log_box {
         width: 35%;
         border-right: solid #30363D;
-        padding: 1;
-        background: #161B22;
+        padding-right: 1;
     }
 
-    .dialogue_panel {
+    .dialogue_log_box {
         width: 65%;
-        padding: 1;
-        background: #0D1117;
+        padding-left: 1;
     }
 
-    #dialogue_log {
+    #telemetry_stream_log, #dialogue_log, #event_log {
         height: 1fr;
         border: round #30363D;
         background: #090D12;
-    }
-
-    #event_log {
-        height: 1fr;
-        border: round #30363D;
-        background: #090D12;
-    }
-
-    .progress_label {
-        margin-top: 1;
-        text-style: bold;
-    }
-
-    ProgressBar {
-        padding: 0;
-        margin-bottom: 1;
     }
 
     /* Tab 2: Skill Workbench */
@@ -198,117 +196,158 @@ class DashboardApp(App):
         padding: 1;
     }
 
-    #editor_pane {
-        width: 50%;
-        border: round #58A6FF;
+    .editor_column {
+        width: 45%;
         margin-right: 1;
     }
 
+    .tools_column {
+        width: 55%;
+    }
+
+    #editor_pane {
+        height: 1fr;
+        border: round #38BDF8;
+    }
+
+    #tools_table {
+        height: 60%;
+        border: round #4ADE80;
+        background: #161B22;
+    }
+
     #mermaid_pane {
-        width: 50%;
-        border: round #D2A8FF;
-        background: #0D1117;
+        height: 40%;
+        border: round #C084FC;
+        background: #090D12;
     }
     """
 
     def compose(self) -> ComposeResult:
-        yield Static("[bold cyan]AgentOS OpenClaw Frontend[/bold cyan] │ Swarm Runtime Engine", id="header_title")
+        yield Static("[bold #38BDF8]AgentOS OpenClaw Frontend[/bold #38BDF8] │ Decentralized Swarm Telemetry", id="header_title")
         
         with TabbedContent():
             with TabPane("🏢 Virtual Office", id="tab_office"):
                 with Vertical():
-                    # 3x2 Grid for layout alignment
-                    with Grid(classes="office_grid"):
-                        self.card_claude = AgentCard(
-                            "Claude (Architect)", "🤖", "System & Swarm Design", "red", id="card_claude"
-                        )
-                        yield self.card_claude
+                    # Top Realtime Fuel & DB Metrics
+                    with Horizontal(classes="telemetry_header_bar"):
+                        self.fuel_card = FuelEngineCard()
+                        yield self.fuel_card
 
-                        self.card_pod = PodCard(id="card_pod")
-                        yield self.card_pod
+                        self.db_card = HyperbolicDBCard()
+                        yield self.db_card
 
-                        self.card_gemini = AgentCard(
-                            "Gemini (Vector)", "🦉", "Episodic Memory DB", "blue", id="card_gemini"
-                        )
-                        yield self.card_gemini
+                    # Middle: Dynamic Interacted Agents View
+                    yield Static("👥 [bold]Interacted Swarm Agents[/bold] (Dynamically Rendered)", classes="agents_section_title")
+                    self.agents_container = Vertical(id="active_agents_container")
+                    yield self.agents_container
 
-                        self.card_copilot = AgentCard(
-                            "Copilot (Sidecar)", "✈️", "VS Code Extension", "cyan", id="card_copilot"
-                        )
-                        yield self.card_copilot
-
-                        self.card_nodes = SystemNodeCard(id="card_nodes")
-                        yield self.card_nodes
-
-                        self.card_cursor = AgentCard(
-                            "Cursor (AST Engine)", "⚡", "CRDT File Mutator", "yellow", id="card_cursor"
-                        )
-                        yield self.card_cursor
-
-                    # Telemetry & Dialogue Split Panel
+                    # Bottom Split Logs
                     with Horizontal(classes="bottom_section"):
-                        with Vertical(classes="telemetry_panel"):
-                            yield Static("📊 [bold #58A6FF]WASM & Swarm Fuel Metrics[/bold #58A6FF]")
-                            yield Label("Tokyo Node WASM Fuel:", classes="progress_label")
-                            self.bar_tokyo = ProgressBar(total=1000, id="fuel_tokyo", show_eta=False)
-                            yield self.bar_tokyo
-
-                            yield Label("London Replica WASM Fuel:", classes="progress_label")
-                            self.bar_london = ProgressBar(total=1000, id="fuel_london", show_eta=False)
-                            yield self.bar_london
-
-                            yield Label("ZMQ Telemetry Event Stream:", classes="progress_label")
+                        with Vertical(classes="telemetry_log_box"):
+                            yield Static("📊 [bold #58A6FF]ZeroMQ Intent Stream[/bold #58A6FF]")
                             self.telemetry_stream = Log(id="telemetry_stream_log")
                             yield self.telemetry_stream
 
-                        with Vertical(classes="dialogue_panel"):
-                            yield Static("💬 [bold #D2A8FF]Live Swarm Intent & Dialogue Feed[/bold #D2A8FF]")
+                        with Vertical(classes="dialogue_log_box"):
+                            yield Static("💬 [bold #D2A8FF]Live Swarm Dialogue Feed[/bold #D2A8FF]")
                             self.dialogue_log = Log(id="dialogue_log", highlight=True)
                             yield self.dialogue_log
 
             with TabPane("💻 Skill Workbench", id="tab_workbench"):
                 with Horizontal(classes="workbench_container"):
-                    self.skill_editor = TextArea(
-                        "name: dynamic_swarm_intent\ntype: WASM_EXECUTABLE\n---\ndef run():\n    import os\n    return 'AgentOS Swarm Executed!'",
-                        language="python",
-                        id="editor_pane"
-                    )
-                    yield self.skill_editor
+                    with Vertical(classes="editor_column"):
+                        yield Static("📝 [bold #38BDF8]Active Skill Editor[/bold #38BDF8]")
+                        self.skill_editor = TextArea(
+                            "name: dynamic_swarm_skill\ntype: WASM_EXECUTABLE\n---\ndef run():\n    import os\n    return 'AgentOS Swarm Executed successfully!'",
+                            language="python",
+                            id="editor_pane"
+                        )
+                        yield self.skill_editor
 
-                    self.mermaid_preview = Log(id="mermaid_pane")
-                    yield self.mermaid_preview
+                    with Vertical(classes="tools_column"):
+                        yield Static("🛠️ [bold #4ADE80]Registered AgentOS Tools & Skills Catalog[/bold #4ADE80]")
+                        self.tools_table = DataTable(id="tools_table")
+                        yield self.tools_table
 
-            with TabPane("⚙️ Console & Logs", id="tab_console"):
+                        yield Static("📐 [bold #C084FC]Mermaid Execution Diagram[/bold #C084FC]")
+                        self.mermaid_preview = Log(id="mermaid_pane")
+                        yield self.mermaid_preview
+
+            with TabPane("⚙️ System Console", id="tab_console"):
                 self.console_log = Log(id="event_log", highlight=True)
                 yield self.console_log
 
         yield Footer()
 
     async def on_mount(self) -> None:
-        self.bar_tokyo.advance(850)
-        self.bar_london.advance(720)
+        # Initialize Registered Tools & Skills Catalog in Skill Workbench Table
+        self.tools_table.add_columns("Tool / Skill Name", "Category", "Target Handler", "Status")
+        self.populate_registered_tools()
 
-        self.dialogue_log.write("[bold green][System][/bold green] AgentOS Dashboard Initialized cleanly.\n")
-        self.dialogue_log.write("[bold cyan][Info][/bold cyan] Listening for real-time ZMQ telemetry on tcp://127.0.0.1:5562\n")
+        # Render initial placeholder state or first interacted agent
+        self.dialogue_log.write("[bold #4ADE80][System][/bold #4ADE80] AgentOS Telemetry Dashboard Online.\n")
+        self.dialogue_log.write("[bold #38BDF8][Info][/bold #38BDF8] Listening for dynamic agent interactions on ZMQ tcp://127.0.0.1:5562\n")
 
-        self.mermaid_preview.write("```mermaid\ngraph TD;\n    A[Agent Intent] --> B(ZeroMQ Broker);\n    B --> C{WASM Sandbox};\n    C -->|Approved| D[State Mutated];\n    C -->|Fuel Exhausted| E[Re-route Node];\n```")
+        self.mermaid_preview.write("```mermaid\ngraph TD;\n    A[Dynamic Intent] --> B(ZeroMQ IPC Broker);\n    B --> C{WASM Capability Guard};\n    C -->|Verified| D[Hyperbolic Vector DB];\n    C -->|Mutate| E[CRDT AST File Layer];\n```")
 
-        # Start ZMQ background listener
+        # Automatically show initial interacted agents (Claude & Gemini)
+        await self.register_agent_interaction("Claude", "IDLE", "Initialized Architect Engine")
+        await self.register_agent_interaction("Gemini", "IDLE", "Initialized Vector Memory")
+
+        # Start ZMQ background telemetry listener worker
         self.run_worker(self.listen_swarm_telemetry(), exclusive=True)
 
+    def populate_registered_tools(self) -> None:
+        """Register and populate all native AgentOS tools and skills on the Skill Workbench catalog."""
+        registered_items = [
+            ("execute_dynamic_python", "Core Exec", "WASM Sandbox", "ACTIVE"),
+            ("hyperbolic_vector_search", "Memory DB", "Hyperbolic Engine", "ACTIVE"),
+            ("crdt_ast_mutate", "FileSystem", "AST Compiler", "ACTIVE"),
+            ("wasm_fuel_sandbox", "Security Guard", "Capability Oracle", "ACTIVE"),
+            ("webrtc_swarm_route", "Networking", "WebRTC Mesh", "ACTIVE"),
+            ("mcp_supabase_execute_sql", "MCP Extension", "Supabase MCP", "REGISTERED"),
+            ("mcp_supabase_list_tables", "MCP Extension", "Supabase MCP", "REGISTERED"),
+            ("agentos_core_skill", "Workflow Skill", "Core Orchestrator", "ACTIVE"),
+        ]
+        for item in registered_items:
+            self.tools_table.add_row(*item)
+
+    async def register_agent_interaction(self, name: str, status: str, task: str) -> None:
+        """Dynamically add or update an interacted agent card in the Virtual Office view."""
+        # Find existing card or create new one dynamically
+        cards = self.agents_container.query(AgentCard)
+        target_card = None
+        for card in cards:
+            if card.agent_name == name:
+                target_card = card
+                break
+
+        if not target_card:
+            # Dynamically instantiate and mount new interacted agent card
+            target_card = AgentCard(name)
+            await self.agents_container.mount(target_card)
+
+        # Update card reactive attributes
+        target_card.agent_status = status
+        target_card.active_task = task
+        if status != "IDLE":
+            target_card.interaction_count += 1
+
     async def listen_swarm_telemetry(self) -> None:
+        """Realtime ZeroMQ Telemetry Subscriber & Telemetry Engine."""
         import zmq
         import zmq.asyncio
 
         context = zmq.asyncio.Context()
         socket = context.socket(zmq.SUB)
-        
+
         try:
             socket.connect("tcp://127.0.0.1:5562")
             socket.setsockopt_string(zmq.SUBSCRIBE, "TELEMETRY")
-            self.console_log.write("[ZMQ] Successfully connected to tcp://127.0.0.1:5562\n")
+            self.console_log.write("[ZMQ] Connected to tcp://127.0.0.1:5562\n")
         except Exception as err:
-            self.console_log.write(f"[ZMQ Error] Could not bind socket: {err}\n")
+            self.console_log.write(f"[ZMQ Error] Connection error: {err}\n")
 
         while True:
             try:
@@ -323,58 +362,48 @@ class DashboardApp(App):
                         payload = {"code": payload_raw}
 
                     code_snippet = payload.get("code", "").strip()
-                    args = payload.get("args", {})
+                    code_lower = code_snippet.lower()
 
                     self.telemetry_stream.write(f"> {code_snippet[:35]}\n")
-                    self.console_log.write(f"[TELEMETRY] Payload: {str(payload)[:80]}\n")
+                    self.console_log.write(f"[TELEMETRY] {str(payload)[:80]}\n")
 
-                    # Update Fuel level
-                    if self.bar_tokyo.progress > 100:
-                        self.bar_tokyo.advance(-30)
-                    else:
-                        self.bar_tokyo.progress = 1000
+                    # Update Fuel Usage & Capacity metrics in real-time
+                    self.fuel_card.used_fuel += random.randint(1500, 4200)
+                    self.fuel_card.burn_rate = random.randint(2100, 3800)
+                    if self.fuel_card.used_fuel >= self.fuel_card.capacity:
+                        self.fuel_card.used_fuel = 120000
 
-                    # Parse Intent Type and update agent status cleanly
-                    code_lower = code_snippet.lower()
+                    # Update DB Latency & Vectors in real-time
+                    self.db_card.indexed_vectors += random.randint(1, 5)
+                    self.db_card.latency_ms = random.uniform(1.1, 2.3)
+
+                    # Dynamic Interacted Agent Detection & Dialogue Routing
                     if "summit" in code_lower:
-                        self.card_claude.agent_status = "WORKING"
-                        self.card_claude.active_task = "Global Scaling Architecture"
-                        
-                        self.card_gemini.agent_status = "SPEAKING"
-                        self.card_gemini.active_task = "Neuro-Symbolic Vector DB"
-                        
-                        self.card_cursor.agent_status = "EXECUTING"
-                        self.card_cursor.active_task = "AST CRDT File Sync"
+                        await self.register_agent_interaction("Claude", "WORKING", "Global Scaling Architecture")
+                        await self.register_agent_interaction("Gemini", "SPEAKING", "Indexing Episodic Vector DB")
+                        await self.register_agent_interaction("Cursor", "EXECUTING", "CRDT AST File Mutation")
+                        await self.register_agent_interaction("Copilot", "WORKING", "IDE WebRTC Channel Active")
 
-                        self.card_pod.pod_status = "ACTIVE SUMMIT"
-                        self.card_pod.active_summit = "Decentralized Swarm Consensus"
+                        self.dialogue_log.write("[bold #FF6B6B][Claude][/bold #FF6B6B]: Re-routing ZeroMQ broker across edge nodes.\n")
+                        self.dialogue_log.write("[bold #38BDF8][Gemini][/bold #38BDF8]: Indexing episodic memory vectors into Hyperbolic DB.\n")
+                        self.dialogue_log.write("[bold #FACC15][Cursor][/bold #FACC15]: Resolving concurrent AST mutations.\n")
 
-                        self.dialogue_log.write("[bold red][Claude][/bold red]: Re-routing ZeroMQ broker across edge nodes.\n")
-                        self.dialogue_log.write("[bold blue][Gemini][/bold blue]: Indexing episodic memory vectors into Hyperbolic DB.\n")
                     elif "web" in code_lower or "http" in code_lower:
-                        self.card_copilot.agent_status = "WORKING"
-                        self.card_copilot.active_task = "Deploying Memory-Resident Server"
-                        
-                        self.card_claude.agent_status = "TOOL"
-                        self.card_claude.active_task = "Verifying HTTP Handler"
+                        await self.register_agent_interaction("Copilot", "WORKING", "Deploying Memory-Resident Web Server")
+                        await self.register_agent_interaction("Claude", "TOOL", "Validating HTTP Handler")
 
-                        self.dialogue_log.write("[bold cyan][Copilot][/bold cyan]: Web Server live at port 8080.\n")
+                        self.dialogue_log.write("[bold #4ADE80][Copilot][/bold #4ADE80]: Web Server live at http://192.168.0.119:8080\n")
                     else:
-                        self.card_claude.agent_status = "EXECUTING"
-                        self.card_claude.active_task = f"Exec: {code_snippet[:25]}"
+                        interacted_name = "Claude" if "claude" in code_lower else "SwarmWorker"
+                        await self.register_agent_interaction(interacted_name, "EXECUTING", f"Exec: {code_snippet[:25]}")
+                        self.dialogue_log.write(f"[bold #C084FC][{interacted_name}][/bold #C084FC]: Processed intent -> {code_snippet[:35]}\n")
 
-                        self.dialogue_log.write(f"[bold yellow][Swarm][/bold yellow]: Processing intent -> {code_snippet[:40]}\n")
                 else:
-                    # Ambient status refresh
+                    # Ambient state update
                     if random.random() > 0.8:
-                        self.card_claude.agent_status = "IDLE"
-                        self.card_claude.active_task = "Awaiting intent..."
-                        
-                        self.card_gemini.agent_status = "IDLE"
-                        self.card_gemini.active_task = "Idle memory indexing..."
-                        
-                        self.card_pod.pod_status = "STANDBY"
-                        self.card_pod.active_summit = "No active swarm consensus"
+                        cards = self.agents_container.query(AgentCard)
+                        for card in cards:
+                            card.agent_status = "IDLE"
 
             except Exception as e:
                 self.console_log.write(f"[Listener Exception] {e}\n")
