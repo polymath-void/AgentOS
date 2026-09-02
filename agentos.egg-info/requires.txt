@@ -1,6 +1,4 @@
+aiortc>=1.6.0
 wasmtime>=16.0.0
 websockets
 pyzmq
-
-[swarm]
-aiortc>=1.6.0

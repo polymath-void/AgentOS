@@ -66,11 +66,8 @@ On heavily sandboxed, non-rooted edge devices, the Docker Daemon (`dockerd`) can
 You can bypass Docker entirely and boot the OS directly into the native Python runtime environment:
 
 ```bash
-# 1. Install directly from PyPI (Core OS only - bypasses WebRTC C-compilers)
+# 1. Install directly from PyPI (Coming soon!)
 pip install agentos
-
-# (Optional) If you have a rooted GNU environment and want the WebRTC mesh:
-# pip install agentos[swarm]
 
 # 2. Boot the native Kernel
 agentos

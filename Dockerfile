@@ -15,7 +15,7 @@ RUN pip install --upgrade pip
 
 # Copy dependency configuration and install
 COPY pyproject.toml .
-RUN pip install .[swarm]
+RUN pip install .
 
 # Copy the AgentOS ecosystem files
 COPY agentos/ ./agentos/
