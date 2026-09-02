@@ -49,13 +49,13 @@ class OfficeMap(Static):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.agents = {
-            "Claude": Agent("Claude", "🤖", "red", 6, 3),
-            "Gemini": Agent("Gemini", "🦉", "blue", 45, 3)
+            "Claude": Agent("Claude", "🤖", "red", 12, 10),
+            "Gemini": Agent("Gemini", "🦉", "blue", 65, 14)
         }
         self.mock_agents = [
-            Agent("Bot 1", "⚙️", "green", 15, 5),
-            Agent("Bot 2", "⚙️", "yellow", 35, 7),
-            Agent("Bot 3", "⚙️", "magenta", 25, 2)
+            Agent("QA Bot", "⚙️", "green", 15, 4),
+            Agent("Deploy Bot", "⚙️", "yellow", 65, 5),
+            Agent("Sec Bot", "⚙️", "magenta", 40, 17)
         ]
         self.collab_lines = []
         self.set_interval(0.1, self.tick)
@@ -68,8 +68,8 @@ class OfficeMap(Static):
                 
         for mock in self.mock_agents:
             if random.random() > 0.9:
-                mock.target_x = max(1, min(self.size.width - 2, mock.x + random.randint(-8, 8)))
-                mock.target_y = max(1, min(self.size.height - 2, mock.y + random.randint(-4, 4)))
+                mock.target_x = max(1, min(78, mock.x + random.randint(-10, 10)))
+                mock.target_y = max(1, min(18, mock.y + random.randint(-5, 5)))
             if mock.move():
                 changed = True
                 
@@ -77,52 +77,67 @@ class OfficeMap(Static):
             self.refresh(layout=True)
 
     def render(self) -> str:
-        width = max(30, self.size.width)
-        height = max(10, self.size.height)
+        width = 80
+        height = 20
         
-        grid = [[' ' for _ in range(width)] for _ in range(height)]
+        # Base dotted floor
+        grid = [['[bright_black]·[/]' for _ in range(width)] for _ in range(height)]
         
         # Draw Boundary
         for x in range(width):
-            grid[0][x] = '─'
-            grid[height-1][x] = '─'
+            grid[0][x] = '[blue]═[/]'
+            grid[height-1][x] = '[blue]═[/]'
         for y in range(height):
-            grid[y][0] = '│'
-            grid[y][width-1] = '│'
-        grid[0][0] = '╭'
-        grid[0][width-1] = '╮'
-        grid[height-1][0] = '╰'
-        grid[height-1][width-1] = '╯'
+            grid[y][0] = '[blue]║[/]'
+            grid[y][width-1] = '[blue]║[/]'
+        grid[0][0] = '[blue]╔[/]'
+        grid[0][width-1] = '[blue]╗[/]'
+        grid[height-1][0] = '[blue]╚[/]'
+        grid[height-1][width-1] = '[blue]╝[/]'
         
-        # Draw Claude Desk with Computers
-        self._draw_box(grid, 2, 2, 10, 4, "[bright_black]Claude Desk[/]")
-        if 6 < width: grid[3][6] = '💻'
-        if 7 < width: grid[3][7] = ''
+        # Draw Server Racks (Top Left)
+        for y in range(2, 6):
+            for x in range(4, 12):
+                grid[y][x] = '[cyan]█[/]' if random.random() > 0.2 else '[white]█[/]'
+            for x in range(16, 24):
+                grid[y][x] = '[cyan]█[/]' if random.random() > 0.2 else '[white]█[/]'
+
+        # Draw Lounge (Top Right)
+        self._draw_box(grid, 55, 2, 75, 6, "[yellow]Lounge Area[/]", "yellow")
+        if grid[4][60] == '[bright_black]·[/]': grid[4][60] = '🛋'
+        if grid[4][61] == '[bright_black]·[/]': grid[4][61] = '️'
+        if grid[4][70] == '[bright_black]·[/]': grid[4][70] = '☕'
         
-        # Draw Gemini Desk with Computers
-        g_desk_x = width - 12
-        if g_desk_x > 12:
-            self._draw_box(grid, g_desk_x, 2, width - 4, 4, "[bright_black]Gemini Desk[/]")
-            if g_desk_x + 4 < width: grid[3][g_desk_x + 4] = '💻'
-            if g_desk_x + 5 < width: grid[3][g_desk_x + 5] = ''
+        # Draw Claude Desk (Left Middle)
+        self._draw_box(grid, 5, 8, 25, 13, "[red]Architect Desk[/]", "red")
+        grid[10][10] = '💻'
+        grid[10][11] = ' '
+        grid[10][20] = '🪴'
+        grid[10][21] = ' '
         
-        # Draw Meeting Pod
-        pod_w = 20
-        pod_h = 6
-        cx = width // 2
-        cy = height // 2
-        if cx - pod_w//2 > 0 and cy - pod_h//2 > 0:
-            self._draw_box(grid, cx - pod_w//2, cy - pod_h//2, cx + pod_w//2, cy + pod_h//2, "[magenta]Meeting Pod[/]")
-            # Add some plants around meeting pod
-            grid[cy - pod_h//2 + 1][cx - pod_w//2 + 1] = '[green]♣[/]'
-            grid[cy + pod_h//2 - 1][cx + pod_w//2 - 1] = '[green]♣[/]'
+        # Draw Gemini Desk (Right Bottom)
+        self._draw_box(grid, 55, 12, 75, 17, "[blue]Vector Memory[/]", "blue")
+        grid[14][60] = '💻'
+        grid[14][61] = ' '
+        grid[14][70] = '🪴'
+        grid[14][71] = ' '
+        
+        # Draw Central Meeting Pod
+        cx, cy = 40, 12
+        pod_w, pod_h = 24, 8
+        self._draw_box(grid, cx - pod_w//2, cy - pod_h//2, cx + pod_w//2, cy + pod_h//2, "[magenta]Collab Pod[/]", "magenta")
+        # Holo-table inside pod
+        for x in range(cx - 4, cx + 5):
+            grid[cy][x] = '[bold cyan]═[/]'
+        grid[cy][cx] = '🌀'
+        grid[cy][cx+1] = ' '
 
         # Draw Collaboration Line
         if self.collab_lines:
             c1, c2 = self.agents["Claude"], self.agents["Gemini"]
             for x in range(min(c1.x, c2.x) + 2, max(c1.x, c2.x)):
                 if 0 < x < width and 0 < c1.y < height:
-                    if grid[c1.y][x] == ' ':
+                    if grid[c1.y][x] == '[bright_black]·[/]':
                         grid[c1.y][x] = '[green]┈[/]'
 
         # Overlay Agents
@@ -134,36 +149,40 @@ class OfficeMap(Static):
         for agent in self.agents.values():
             ax, ay = agent.x, agent.y
             if 0 < ax < width - 2 and 0 < ay < height - 1:
-                grid[ay][ax] = agent.get_avatar()
+                # Add background color to highlight main agents
+                bg_color = "on grey15"
+                symbol = agent.symbol
+                emoji = {"idle": "💤", "working": "⠷", "speaking": "💬", "tool": "🛠️"}.get(agent.status, "💤")
+                grid[ay][ax] = f"[{agent.color} {bg_color}] {symbol} [/]{emoji}"
                 grid[ay][ax+1] = '' 
 
         lines = ["".join(filter(None, row)) for row in grid]
         return "\n".join(lines)
         
-    def _draw_box(self, grid, x1, y1, x2, y2, title):
+    def _draw_box(self, grid, x1, y1, x2, y2, title, color="white"):
         if not (0 <= x1 < x2 < len(grid[0]) and 0 <= y1 < y2 < len(grid)): return
         for x in range(x1, x2 + 1):
-            grid[y1][x] = '─'
-            grid[y2][x] = '─'
+            grid[y1][x] = f'[{color}]─[/]'
+            grid[y2][x] = f'[{color}]─[/]'
         for y in range(y1, y2 + 1):
-            grid[y][x1] = '│'
-            grid[y][x2] = '│'
-        grid[y1][x1] = '╭'
-        grid[y1][x2] = '╮'
-        grid[y2][x1] = '╰'
-        grid[y2][x2] = '╯'
+            grid[y][x1] = f'[{color}]│[/]'
+            grid[y][x2] = f'[{color}]│[/]'
+        grid[y1][x1] = f'[{color}]╭[/]'
+        grid[y1][x2] = f'[{color}]╮[/]'
+        grid[y2][x1] = f'[{color}]╰[/]'
+        grid[y2][x2] = f'[{color}]╯[/]'
         t_str = f" {title} "
-        if x1 + 2 + 15 < x2:
+        if x1 + 2 + 18 < x2:
             grid[y1][x1+2] = t_str
-            for i in range(x1+3, x1+3+12):
+            for i in range(x1+3, x1+3+15):
                 grid[y1][i] = ''
 
 class DashboardApp(App):
     CSS = """
     Screen { background: $surface; }
     #header { height: 3; content-align: center middle; background: $boost; border-bottom: heavy $accent; }
-    .map_container { height: 75%; padding: 1; }
-    .bottom_panel { height: 25%; border-top: solid $primary; padding: 1; }
+    .map_container { height: 22; padding: 1; align: center middle; }
+    .bottom_panel { height: 12; border-top: solid $primary; padding: 1; }
     .fuel_box { width: 30%; }
     .dialogue_box { width: 40%; border-left: solid $secondary; padding-left: 2; }
     #telemetry_log { width: 30%; border-left: solid $secondary; }
@@ -240,23 +259,20 @@ class DashboardApp(App):
                     c = self.office_map.agents["Claude"]
                     g = self.office_map.agents["Gemini"]
                     
-                    cx = self.office_map.size.width // 2
-                    cy = max(3, self.office_map.size.height // 2)
-                    
                     code = payload.get("code", "").lower()
                     if "summit" in code or "claude" in code:
-                        c.target_x, c.target_y = cx - 5, cy
+                        c.target_x, c.target_y = 35, 12
                         c.status = "working"
                         c.dialogue = "Processing Summit Payload!"
-                        g.target_x, g.target_y = cx + 5, cy
+                        g.target_x, g.target_y = 45, 12
                         g.status = "speaking"
                         g.dialogue = "Joining swarm pod."
                         self.office_map.collab_lines = [True]
                     else:
-                        c.target_x, c.target_y = 6, 3
+                        c.target_x, c.target_y = 12, 10
                         c.status = "idle"
                         c.dialogue = "Awaiting intent..."
-                        g.target_x, g.target_y = max(10, self.office_map.size.width - 8), 3
+                        g.target_x, g.target_y = 65, 14
                         g.status = "tool"
                         g.dialogue = "Vectorizing..."
                         self.office_map.collab_lines = []
@@ -266,8 +282,8 @@ class DashboardApp(App):
                     if random.random() > 0.8:
                         c = self.office_map.agents["Claude"]
                         g = self.office_map.agents["Gemini"]
-                        c.target_x, c.target_y = 6, 3
-                        g.target_x, g.target_y = max(10, self.office_map.size.width - 8), 3
+                        c.target_x, c.target_y = 12, 10
+                        g.target_x, g.target_y = 65, 14
                         c.status, g.status = "idle", "idle"
                         c.dialogue, g.dialogue = "Awaiting...", "Awaiting..."
                         self.office_map.collab_lines = []
