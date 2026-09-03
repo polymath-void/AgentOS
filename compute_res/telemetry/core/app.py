@@ -249,13 +249,13 @@ class DashboardApp(App):
                     for card in list(cards):
                         idle_time = current_time - card.last_active_time
                         
-                        # Step 1: Transition to IDLE after 2 seconds of inactivity
-                        if idle_time > 2.0 and card.agent_status != "IDLE":
+                        # Step 1: Transition to IDLE after 5 seconds of inactivity
+                        if idle_time > 5.0 and card.agent_status != "IDLE":
                             card.agent_status = "IDLE"
                             card.active_task = "Awaiting intent..."
                         
-                        # Step 2: Unmount completely after 7 seconds of being idle
-                        if idle_time > 7.0:
+                        # Step 2: Unmount completely after 120 seconds of being idle
+                        if idle_time > 120.0:
                             await card.remove()
                             
                     # Remount placeholder if empty
