@@ -89,6 +89,38 @@ def run(**kwargs):
     return await send_to_kernel(intent)
 
 @mcp.tool()
+async def mailbox_send(session_id: str, agent_id: str, message: str) -> str:
+    """
+    Asynchronously pushes a message or context payload into the ComputeRes stateful memory.
+    Use this to communicate continuously with the OS and other active agents without holding open a shell.
+    """
+    code = f'''
+def run(**kwargs):
+    from compute_res.memory.chat_db import db
+    row_id = db.insert(
+        session_id="{session_id}", 
+        agent_id="{agent_id}", 
+        action="mailbox_push", 
+        message="""{message}"""
+    )
+    return {{"status": "SUCCESS", "message": "Message successfully pushed to ComputeRes OS."}}
+'''
+    return await send_to_kernel({"code": code, "args": {}})
+
+@mcp.tool()
+async def mailbox_read(session_id: str) -> str:
+    """
+    Reads the asynchronous mailbox for your specific session. 
+    Use this to pull responses from other agents or OS daemons instead of running a persistent background client.
+    """
+    code = f'''
+def run(**kwargs):
+    from compute_res.memory.chat_db import db
+    return {{"results": db.get_session("{session_id}")}}
+'''
+    return await send_to_kernel({"code": code, "args": {}})
+
+@mcp.tool()
 async def invoke_compute_res_skill(skill_name: str, args: str = "{}") -> str:
     """
     Invokes a pre-evolved or pre-registered ComputeRes skill dynamically.
