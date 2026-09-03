@@ -42,8 +42,8 @@ The main operational view for monitoring swarm nodes and real-time execution tel
    - **WASM Fuel Engine Card (`FuelEngineCard`)**: Tracks Total Fuel Capacity (1,000,000 Fuel), Used Fuel, Burn Rate (fuel/sec), and Bounded RAM Usage (512 MB).
    - **Hyperbolic Vector DB Card (`HyperbolicDBCard`)**: Displays Indexed Vectors count (14,280+), AST Tree Depth (12), Search Latency (ms), and Poincaré Ball distance metric ($d_H$).
 2. **Virtual Office Floor Grid Box (`#active_agents_grid_box`)**:
-   - Styled 2x2 grid container (`border: round #38BDF8; background: #0D1117;`).
-   - **Dynamic Interacted Agent Mounting**: Starts completely clean with an empty placeholder. Agent cards (`AgentCard`) are instantiated and mounted **ONLY when ZMQ telemetry receives active agent intents**.
+   - Styled responsive grid container (`layout: grid; grid-size: 2; height: 1fr; border: round #38BDF8; background: #0D1117;`).
+   - **Dynamic Interacted Agent Mounting**: Starts completely clean with an empty placeholder. Agent cards (`AgentCard`) are instantiated and mounted **ONLY when ZMQ telemetry receives active agent intents**, and idle agents dynamically unmount over time to keep the dashboard responsive and fresh.
    - **Vibrant Agent Palette**:
      - **Claude**: `#FF6B6B` (Architect Engine)
      - **Gemini**: `#38BDF8` (Bright Cyan – High Visibility contrast on dark backgrounds)
@@ -59,9 +59,9 @@ The main operational view for monitoring swarm nodes and real-time execution tel
 ### 3.2 Tab 2: 💻 Skill Workbench
 The interactive workspace for editing skills and cataloging registered system tools.
 
-1. **Active Skill Editor (`TextArea`)**:
-   - Full code editor widget with Python/YAML syntax highlighting for editing dynamic WASM skill executables.
-2. **Registered Tools & Skills Catalog (`DataTable`)**:
+1. **Active Skill Editor (`TextArea`)** (45% Width):
+   - Full code editor widget with Python/YAML syntax highlighting for editing dynamic WASM skill executables. Fits perfectly to screen with `height: 1fr;`.
+2. **Registered Tools & Skills Catalog (`DataTable`)** (55% Width):
    - Interactive table listing all native AgentOS tools and registered MCP capabilities:
      - `execute_dynamic_python` (Core WASM Execution Sandbox)
      - `hyperbolic_vector_search` (Poincaré Ball Memory Indexer)
@@ -94,7 +94,8 @@ The interactive workspace for editing skills and cataloging registered system to
               ├──► Query #active_agents_grid_box Container
               │         │
               │         ├── If Agent absent: Mount new AgentCard dynamically
-              │         └── If Agent present: Update reactive agent_status & active_task
+              │         ├── If Agent present: Update reactive agent_status & active_task
+              │         └── If Ambient/Idle: Dynamically unmount idle AgentCards to clear space
               │
               └──► Append formatted line to dialogue_log & telemetry_stream_log
 ```

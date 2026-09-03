@@ -75,8 +75,11 @@ pip install agentos
 chmod +x termux_setup.sh
 ./termux_setup.sh
 
-# 2. Boot the native Kernel
+# 2. Boot the native Kernel in one tab
 agentos
+
+# 3. Boot the Telemetry TUI Dashboard in a second tab
+python3 -m agentos.telemetry.core.app
 ```
 *Note: The native python deployment seamlessly maps the `~/.agentos/tools/` filesystem in your home directory to maintain structural consistency without container volumes.*
 

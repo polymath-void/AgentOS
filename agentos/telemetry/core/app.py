@@ -10,7 +10,7 @@ try:
     from textual.containers import Container, Horizontal, Vertical, Grid
     from textual.widgets import (
         Static,
-        Log,
+        RichLog,
         ProgressBar,
         TabbedContent,
         TabPane,
@@ -25,82 +25,7 @@ except ImportError:
     print("Please install it by running: pip install textual rich")
     sys.exit(1)
 
-
-# Vibrant, high-contrast color scheme for agents (Gemini is bright cyan #38BDF8)
-AGENT_STYLES = {
-    "Claude": {"icon": "🤖", "color": "#FF6B6B", "border": "#FF6B6B", "role": "Architect Engine"},
-    "Gemini": {"icon": "🦉", "color": "#38BDF8", "border": "#38BDF8", "role": "Hyperbolic Vector Memory"},
-    "Copilot": {"icon": "✈️", "color": "#4ADE80", "border": "#4ADE80", "role": "IDE Sidecar Bridge"},
-    "Cursor": {"icon": "⚡", "color": "#FACC15", "border": "#FACC15", "role": "CRDT AST Mutator"},
-    "SwarmWorker": {"icon": "⚙️", "color": "#C084FC", "border": "#C084FC", "role": "Dynamic Swarm Node"},
-}
-
-
-class AgentCard(Static):
-    """Dynamically created Agent Workstation card for interacted agents."""
-    
-    agent_status = reactive("IDLE")
-    active_task = reactive("Awaiting intent...")
-    interaction_count = reactive(1)
-
-    def __init__(self, name: str, **kwargs):
-        super().__init__(**kwargs)
-        self.agent_name = name
-        info = AGENT_STYLES.get(name, AGENT_STYLES["SwarmWorker"])
-        self.icon = info["icon"]
-        self.color = info["color"]
-        self.role = info["role"]
-
-    def render(self) -> str:
-        status_colors = {
-            "IDLE": "grey60",
-            "WORKING": "yellow",
-            "SPEAKING": "bold cyan",
-            "EXECUTING": "bold green",
-            "TOOL": "bold magenta",
-        }
-        badge = f"[{status_colors.get(self.agent_status, 'white')}]● {self.agent_status}[/]"
-        
-        return (
-            f"[bold {self.color}]{self.icon} {self.agent_name}[/bold {self.color}]  "
-            f"[dim]({self.role})[/dim]\n"
-            f"Status: {badge}  │  Interactions: [bold white]{self.interaction_count}[/bold white]\n"
-            f"Active Intent: [italic]{self.active_task[:38]}[/italic]"
-        )
-
-
-class FuelEngineCard(Static):
-    """Realtime WASM Fuel Capacity & System Resource Telemetry."""
-
-    capacity = reactive(1000000)
-    used_fuel = reactive(142500)
-    burn_rate = reactive(2400)
-    ram_mb = reactive(128)
-
-    def render(self) -> str:
-        used_pct = (self.used_fuel / self.capacity) * 100
-        return (
-            f"[bold #58A6FF]⚡ WASM Fuel Engine & Capacity[/bold #58A6FF]\n"
-            f"Capacity: [bold white]{self.capacity:,}[/bold white] Fuel  │  Used: [yellow]{self.used_fuel:,} ({used_pct:.1f}%)[/yellow]\n"
-            f"Burn Rate: [cyan]{self.burn_rate:,} fuel/sec[/cyan]  │  RAM Bounded: [green]{self.ram_mb} MB / 512 MB[/green]"
-        )
-
-
-class HyperbolicDBCard(Static):
-    """Realtime Vector & Memory Database Telemetry."""
-
-    indexed_vectors = reactive(14280)
-    tree_depth = reactive(12)
-    latency_ms = reactive(1.4)
-    dist_metric = reactive("d_H (Poincaré Ball)")
-
-    def render(self) -> str:
-        return (
-            f"[bold #D2A8FF]🧠 Hyperbolic Vector DB Telemetry[/bold #D2A8FF]\n"
-            f"Indexed Vectors: [bold white]{self.indexed_vectors:,}[/bold white]  │  AST Tree Depth: [cyan]{self.tree_depth}[/cyan]\n"
-            f"Search Latency: [green]{self.latency_ms:.2f} ms[/green]  │  Metric: [italic]{self.dist_metric}[/italic]"
-        )
-
+from agentos.telemetry.components.cards import AgentCard, FuelEngineCard, HyperbolicDBCard, AGENT_STYLES
 
 class DashboardApp(App):
     """Production-Grade AgentOS Telemetry & Swarm Dashboard."""
@@ -108,133 +33,7 @@ class DashboardApp(App):
     TITLE = "AgentOS OpenClaw Telemetry"
     SUB_TITLE = "Real-Time Decentralized AI Swarm Environment"
 
-    CSS = """
-    Screen {
-        background: #0B0E14;
-        color: #C9D1D9;
-    }
-
-    #header_title {
-        height: 3;
-        content-align: center middle;
-        background: #161B22;
-        color: #38BDF8;
-        border-bottom: solid #30363D;
-        text-style: bold;
-    }
-
-    /* Top Telemetry Cards */
-    .telemetry_header_bar {
-        height: 7;
-        margin: 1 1 0 1;
-    }
-
-    FuelEngineCard {
-        width: 50%;
-        background: #161B22;
-        border: round #58A6FF;
-        padding: 1 2;
-        margin-right: 1;
-    }
-
-    HyperbolicDBCard {
-        width: 50%;
-        background: #161B22;
-        border: round #D2A8FF;
-        padding: 1 2;
-    }
-
-    /* Dynamic Virtual Office Grid Box */
-    .agents_section_title {
-        margin: 1 1 0 1;
-        text-style: bold;
-        color: #38BDF8;
-    }
-
-    #active_agents_grid_box {
-        layout: grid;
-        grid-size: 2 2;
-        grid-gutter: 1;
-        height: 12;
-        margin: 0 1 1 1;
-        padding: 1;
-        border: round #38BDF8;
-        background: #0D1117;
-    }
-
-    #empty_placeholder {
-        column-span: 2;
-        row-span: 2;
-        content-align: center middle;
-        color: #8B949E;
-        text-style: italic;
-    }
-
-    AgentCard {
-        background: #161B22;
-        border: round #30363D;
-        padding: 1 2;
-        height: 100%;
-    }
-
-    /* Bottom Log & Dialogue Section */
-    .bottom_section {
-        height: 1fr;
-        margin: 0 1 1 1;
-    }
-
-    .telemetry_log_box {
-        width: 35%;
-        border-right: solid #30363D;
-        padding-right: 1;
-    }
-
-    .dialogue_log_box {
-        width: 65%;
-        padding-left: 1;
-    }
-
-    #telemetry_stream_log, #dialogue_log, #event_log {
-        height: 1fr;
-        border: round #30363D;
-        background: #090D12;
-    }
-
-    /* Tab 2: Skill Workbench */
-    .workbench_container {
-        height: 100%;
-        padding: 1;
-    }
-
-    .editor_column {
-        width: 45%;
-        height: 100%;
-        margin-right: 1;
-    }
-
-    .tools_column {
-        width: 55%;
-        height: 100%;
-    }
-
-    #editor_pane {
-        height: 1fr;
-        border: round #38BDF8;
-    }
-
-    #tools_table {
-        height: 1fr;
-        border: round #4ADE80;
-        background: #161B22;
-        margin-bottom: 1;
-    }
-
-    #mermaid_pane {
-        height: 1fr;
-        border: round #C084FC;
-        background: #090D12;
-    }
-    """
+    CSS_PATH = "../styles/tui.css"
 
     def compose(self) -> ComposeResult:
         yield Static("[bold #38BDF8]AgentOS OpenClaw Frontend[/bold #38BDF8] │ Decentralized Swarm Telemetry", id="header_title")
@@ -263,12 +62,12 @@ class DashboardApp(App):
                     with Horizontal(classes="bottom_section"):
                         with Vertical(classes="telemetry_log_box"):
                             yield Static("📊 [bold #58A6FF]ZeroMQ Intent Stream[/bold #58A6FF]")
-                            self.telemetry_stream = Log(id="telemetry_stream_log")
+                            self.telemetry_stream = RichLog(id="telemetry_stream_log", wrap=True, markup=True)
                             yield self.telemetry_stream
 
                         with Vertical(classes="dialogue_log_box"):
                             yield Static("💬 [bold #D2A8FF]Live Swarm Dialogue Feed[/bold #D2A8FF]")
-                            self.dialogue_log = Log(id="dialogue_log", highlight=True)
+                            self.dialogue_log = RichLog(id="dialogue_log", highlight=True, wrap=True, markup=True)
                             yield self.dialogue_log
 
             with TabPane("💻 Skill Workbench", id="tab_workbench"):
@@ -288,11 +87,11 @@ class DashboardApp(App):
                         yield self.tools_table
 
                         yield Static("📐 [bold #C084FC]Mermaid Execution Diagram[/bold #C084FC]")
-                        self.mermaid_preview = Log(id="mermaid_pane")
+                        self.mermaid_preview = RichLog(id="mermaid_pane", wrap=True, markup=True)
                         yield self.mermaid_preview
 
             with TabPane("⚙️ System Console", id="tab_console"):
-                self.console_log = Log(id="event_log", highlight=True)
+                self.console_log = RichLog(id="event_log", highlight=True, wrap=True, markup=True)
                 yield self.console_log
 
         yield Footer()
@@ -359,6 +158,7 @@ class DashboardApp(App):
         # Update card reactive attributes
         target_card.agent_status = status
         target_card.active_task = task
+        target_card.last_active_time = time.time()
         if status != "IDLE":
             target_card.interaction_count += 1
 
@@ -379,7 +179,8 @@ class DashboardApp(App):
 
         while True:
             try:
-                events = await socket.poll(timeout=1000)
+                # Dramatically reduce polling latency for instant agent launching
+                events = await socket.poll(timeout=50)
                 if events:
                     msg = await socket.recv_string()
                     payload_raw = msg.replace("TELEMETRY ", "", 1)
@@ -392,8 +193,12 @@ class DashboardApp(App):
                     code_snippet = payload.get("code", "").strip()
                     code_lower = code_snippet.lower()
 
-                    self.telemetry_stream.write(f"> {code_snippet[:35]}\n")
-                    self.console_log.write(f"[TELEMETRY] {str(payload)[:80]}\n")
+                    # Better formatting for the stream instead of a hard slice
+                    display_code = code_snippet.split('\n')[0]
+                    if len(display_code) > 80:
+                        display_code = display_code[:77] + "..."
+                    self.telemetry_stream.write(f"> {display_code}")
+                    self.console_log.write(f"[TELEMETRY] {str(payload)[:150]}")
 
                     # Update Fuel Usage & Capacity metrics in real-time
                     self.fuel_card.used_fuel += random.randint(1500, 4200)
@@ -422,21 +227,49 @@ class DashboardApp(App):
 
                         self.dialogue_log.write("[bold #4ADE80][Copilot][/bold #4ADE80]: Web Server live at http://192.168.0.119:8080\n")
                     else:
-                        interacted_name = "Claude" if "claude" in code_lower else "SwarmWorker"
-                        await self.register_agent_interaction(interacted_name, "EXECUTING", f"Exec: {code_snippet[:25]}")
-                        self.dialogue_log.write(f"[bold #C084FC][{interacted_name}][/bold #C084FC]: Processed intent -> {code_snippet[:35]}\n")
+                        # Only show agents dynamically if explicitly mapped in payload or standard ones
+                        agent_name = payload.get("agent", "")
+                        if not agent_name:
+                            agent_name = "Claude" if "claude" in code_lower else "SwarmWorker"
+                            
+                        await self.register_agent_interaction(agent_name, "EXECUTING", f"Exec: {code_snippet[:25]}")
+                        
+                        # Set default styling for unknown agents if not defined
+                        if agent_name not in AGENT_STYLES:
+                            AGENT_STYLES[agent_name] = {"icon": "🤖", "color": "#FFFFFF", "border": "#FFFFFF", "role": "Dynamic Node"}
+                            
+                        self.dialogue_log.write(f"[bold {AGENT_STYLES[agent_name]['color']}][{agent_name}][/bold {AGENT_STYLES[agent_name]['color']}]: Processed intent -> {code_snippet[:35]}\n")
 
                 else:
-                    # Ambient state update
-                    if random.random() > 0.8:
-                        grid_box = self.query_one("#active_agents_grid_box", Container)
-                        cards = grid_box.query(AgentCard)
-                        for card in cards:
+                    # Smart, time-based Ambient State Decay Update
+                    current_time = time.time()
+                    grid_box = self.query_one("#active_agents_grid_box", Container)
+                    cards = grid_box.query(AgentCard)
+                    
+                    for card in list(cards):
+                        idle_time = current_time - card.last_active_time
+                        
+                        # Step 1: Transition to IDLE after 2 seconds of inactivity
+                        if idle_time > 2.0 and card.agent_status != "IDLE":
                             card.agent_status = "IDLE"
+                            card.active_task = "Awaiting intent..."
+                        
+                        # Step 2: Unmount completely after 7 seconds of being idle
+                        if idle_time > 7.0:
+                            await card.remove()
+                            
+                    # Remount placeholder if empty
+                    if len(grid_box.query(AgentCard)) == 0:
+                        if not (hasattr(self, 'placeholder') and self.placeholder and self.placeholder.parent):
+                            self.placeholder = Label(
+                                "⚡ No active agents.\nListening on ZeroMQ telemetry... Cards appear dynamically.",
+                                id="empty_placeholder"
+                            )
+                            await grid_box.mount(self.placeholder)
 
             except Exception as e:
-                self.console_log.write(f"[Listener Exception] {e}\n")
-                await asyncio.sleep(2)
+                self.console_log.write(f"[bold red][Listener Exception][/bold red] {e}")
+                await asyncio.sleep(0.5)
 
 
 if __name__ == "__main__":

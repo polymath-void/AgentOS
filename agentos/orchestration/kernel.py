@@ -22,10 +22,20 @@ async def worker_backend():
     socket = context.socket(zmq.REP)
     socket.connect("tcp://127.0.0.1:5558")
     logger.info("Local ZeroMQ Worker bound to DEALER.")
+    
+    # Telemetry Publisher for the TUI Dashboard
+    pub_socket = context.socket(zmq.PUB)
+    pub_socket.bind("tcp://127.0.0.1:5562")
+    logger.info("Telemetry PUB socket bound on tcp://127.0.0.1:5562")
+    
     while True:
         try:
             request = await socket.recv_json()
             logger.info(f"Worker received intent: {request}")
+            
+            # Broadcast telemetry to the TUI
+            import json
+            await pub_socket.send_string(f"TELEMETRY {json.dumps(request)}")
             
             tool_name = request.get("tool")
             code = request.get("code")
