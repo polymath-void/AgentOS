@@ -15,7 +15,7 @@ mcp = FastMCP("ComputeRes_Gateway")
 # Global context placeholder
 _zmq_context = None
 
-async def send_to_kernel(intent: dict, timeout_ms: int = 25000) -> str:
+async def send_to_kernel(intent: dict, timeout_ms: int = 86400000) -> str:
     """Helper function to route intents to the ComputeRes Daemon via ZeroMQ"""
     global _zmq_context
     if _zmq_context is None:
@@ -144,10 +144,6 @@ async def run(**kwargs):
         
         if new_logs:
             return {{"status": "WAKEUP", "events": new_logs}}
-            
-        # Prevent indefinite blocking; return timeout if no events after 20 seconds
-        if time.time() - start_time > 20:
-            return {{"status": "TIMEOUT", "message": "No new events. You are still logged in. Re-invoke kernel_login_loop to continue waiting."}}
             
         await asyncio.sleep(2)
 '''
