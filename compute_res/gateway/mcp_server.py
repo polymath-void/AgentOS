@@ -40,6 +40,7 @@ async def send_to_kernel(intent: dict, timeout_ms: int = 15000) -> str:
 async def execute_dynamic_python(code: str, args: str = "{}") -> str:
     """
     Dynamically executes a raw Python payload directly in the ComputeRes sandbox.
+    Use this if you need to run custom logic, access the filesystem, or interact with the OS where a native skill doesn't exist.
     
     Args:
         code: A string of Python code containing a `def run(**kwargs):` block.
@@ -58,13 +59,44 @@ async def execute_dynamic_python(code: str, args: str = "{}") -> str:
     return await send_to_kernel(intent)
 
 @mcp.tool()
+async def list_compute_res_skills() -> str:
+    """
+    Lists all dynamically registered and evolved skills available inside the ComputeRes OS.
+    Call this first to discover what native tools you can invoke via `invoke_compute_res_skill`.
+    """
+    # We can execute a dynamic payload on the kernel to retrieve the list of skills
+    code = '''
+def run(**kwargs):
+    import os
+    import importlib
+    import inspect
+    skills_dir = '/data/data/com.termux/files/home/Projects/ComputeRes/compute_res/tools/evolved_skills'
+    skills = []
+    if os.path.exists(skills_dir):
+        for f in os.listdir(skills_dir):
+            if f.endswith('.py') and not f.startswith('__'):
+                skill_name = f[:-3]
+                try:
+                    module_name = f"compute_res.tools.evolved_skills.{skill_name}"
+                    mod = importlib.import_module(module_name)
+                    doc = inspect.getdoc(mod.run) if hasattr(mod, 'run') else "No description available."
+                    skills.append(f"- {skill_name}: {doc}")
+                except Exception as e:
+                    skills.append(f"- {skill_name}: Error loading ({str(e)})")
+    return "\\n".join(skills) if skills else "No skills registered."
+'''
+    intent = {"code": code, "args": {}}
+    return await send_to_kernel(intent)
+
+@mcp.tool()
 async def invoke_compute_res_skill(skill_name: str, args: str = "{}") -> str:
     """
     Invokes a pre-evolved or pre-registered ComputeRes skill dynamically.
+    Use `list_compute_res_skills` first to see which skills are available (like 'login', 'file_organizer', etc).
     
     Args:
-        skill_name: The name of the skill (e.g., 'file_organizer').
-        args: A JSON-encoded string of arguments to pass to the skill.
+        skill_name: The name of the skill (e.g., 'login').
+        args: A JSON-encoded string of arguments to pass to the skill (e.g., '{"agent_id": "X", "context": "Y"}').
     """
     try:
         parsed_args = json.loads(args)
