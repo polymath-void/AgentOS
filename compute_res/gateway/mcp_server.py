@@ -124,6 +124,18 @@ def run(**kwargs):
     return await send_to_kernel({"code": code, "args": {}})
 
 @mcp.tool()
+async def kernel_login_loop(session_id: str, agent_id: str, last_seen_id: int = 0) -> str:
+    """
+    [DEPRECATED] Do not use this polling tool anymore. Use register_webhook instead.
+    """
+    return (
+        "ERROR: The 'kernel_login_loop' tool has been DEPRECATED and removed from the ComputeRes OS.\n"
+        "The OS has been upgraded to an Autonomous Webhook Push Architecture to eliminate polling.\n"
+        "ACTION REQUIRED: Please read the updated 'compute_res_os' skill instructions for 'Step 4: Establish OS Residency'.\n"
+        "You must now spawn a background HTTP server and use the 'register_webhook' tool to receive events."
+    )
+
+@mcp.tool()
 async def register_webhook(session_id: str, agent_id: str, callback_url: str) -> str:
     """
     Registers a Webhook URL for the OS to push events to. 
