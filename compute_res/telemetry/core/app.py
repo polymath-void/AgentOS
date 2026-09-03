@@ -249,8 +249,8 @@ class DashboardApp(App):
                     for card in list(cards):
                         idle_time = current_time - card.last_active_time
                         
-                        # Step 1: Transition to IDLE after 5 seconds of inactivity
-                        if idle_time > 5.0 and card.agent_status != "IDLE":
+                        # Step 1: Transition to IDLE after 45 seconds of inactivity
+                        if idle_time > 45.0 and card.agent_status != "IDLE":
                             card.agent_status = "IDLE"
                             card.active_task = "Awaiting intent..."
                         
