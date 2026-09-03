@@ -1,7 +1,7 @@
-# OpenClaw Office Paradigm for AgentOS
+# OpenClaw Office Paradigm for ComputeRes
 
 ## 1. Core Metaphor Integration
-To make the multi-agent system feel more tangible, AgentOS will adopt the OpenClaw visual metaphor, translating it to our Textual/Rich TUI environment:
+To make the multi-agent system feel more tangible, ComputeRes will adopt the OpenClaw visual metaphor, translating it to our Textual/Rich TUI environment:
 
 *   **Agent** = **Digital Employee**: Each running LLM agent is an entity with a state and persona.
 *   **Office** = **Agent Runtime**: The terminal UI screen is the physical office space where all employees reside.
@@ -41,5 +41,5 @@ The central component will be the `OfficeMap` widget, a 2D canvas (using `textua
 The Skill Workbench will be a dedicated Textual `Screen` for developing and inspecting agent tools.
 
 *   **Skill Editor**: A `TextArea` widget with syntax highlighting (YAML/Python) for editing `.md` skill configurations and python scripts.
-*   **Mermaid Flowcharts**: By parsing the skill workflow, AgentOS can generate Mermaid markdown. This will be rendered in the terminal using a terminal image viewer integration (like `chafa` or `timg`) or converted to an ASCII-art flowchart (via tools like `graph-easy`).
+*   **Mermaid Flowcharts**: By parsing the skill workflow, ComputeRes can generate Mermaid markdown. This will be rendered in the terminal using a terminal image viewer integration (like `chafa` or `timg`) or converted to an ASCII-art flowchart (via tools like `graph-easy`).
 *   **Visual Input Forms**: Using Textual `Input`, `Select`, and `Checkbox` widgets to allow users to interactively test a skill before deploying it to an agent.

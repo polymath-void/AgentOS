@@ -21,22 +21,22 @@ try:
     )
     from textual.reactive import reactive
 except ImportError:
-    print("AgentOS Visual Telemetry requires the 'textual' framework.")
+    print("ComputeRes Visual Telemetry requires the 'textual' framework.")
     print("Please install it by running: pip install textual rich")
     sys.exit(1)
 
-from agentos.telemetry.components.cards import AgentCard, FuelEngineCard, HyperbolicDBCard, AGENT_STYLES
+from compute_res.telemetry.components.cards import AgentCard, FuelEngineCard, HyperbolicDBCard, AGENT_STYLES
 
 class DashboardApp(App):
-    """Production-Grade AgentOS Telemetry & Swarm Dashboard."""
+    """Production-Grade ComputeRes Telemetry & Swarm Dashboard."""
 
-    TITLE = "AgentOS OpenClaw Telemetry"
+    TITLE = "ComputeRes OpenClaw Telemetry"
     SUB_TITLE = "Real-Time Decentralized AI Swarm Environment"
 
     CSS_PATH = "../styles/tui.css"
 
     def compose(self) -> ComposeResult:
-        yield Static("[bold #38BDF8]AgentOS OpenClaw Frontend[/bold #38BDF8] │ Decentralized Swarm Telemetry", id="header_title")
+        yield Static("[bold #38BDF8]ComputeRes OpenClaw Frontend[/bold #38BDF8] │ Decentralized Swarm Telemetry", id="header_title")
         
         with TabbedContent():
             with TabPane("🏢 Virtual Office", id="tab_office"):
@@ -75,14 +75,14 @@ class DashboardApp(App):
                     with Vertical(classes="editor_column"):
                         yield Static("📝 [bold #38BDF8]Active Skill Editor[/bold #38BDF8]")
                         self.skill_editor = TextArea(
-                            "name: dynamic_swarm_skill\ntype: WASM_EXECUTABLE\n---\ndef run():\n    import os\n    return 'AgentOS Swarm Executed successfully!'",
+                            "name: dynamic_swarm_skill\ntype: WASM_EXECUTABLE\n---\ndef run():\n    import os\n    return 'ComputeRes Swarm Executed successfully!'",
                             language="python",
                             id="editor_pane"
                         )
                         yield self.skill_editor
 
                     with Vertical(classes="tools_column"):
-                        yield Static("🛠️ [bold #4ADE80]Registered AgentOS Tools & Skills Catalog[/bold #4ADE80]")
+                        yield Static("🛠️ [bold #4ADE80]Registered ComputeRes Tools & Skills Catalog[/bold #4ADE80]")
                         self.tools_table = DataTable(id="tools_table")
                         yield self.tools_table
 
@@ -102,7 +102,7 @@ class DashboardApp(App):
         self.populate_registered_tools()
 
         # Render initial logs
-        self.dialogue_log.write("[bold #4ADE80][System][/bold #4ADE80] AgentOS Telemetry Dashboard Online.\n")
+        self.dialogue_log.write("[bold #4ADE80][System][/bold #4ADE80] ComputeRes Telemetry Dashboard Online.\n")
         self.dialogue_log.write("[bold #38BDF8][Info][/bold #38BDF8] Office Grid Box initialized. Awaiting real-time telemetry on ZMQ tcp://127.0.0.1:5562\n")
 
         self.mermaid_preview.write("```mermaid\ngraph TD;\n    A[Dynamic Intent] --> B(ZeroMQ IPC Broker);\n    B --> C{WASM Capability Guard};\n    C -->|Verified| D[Hyperbolic Vector DB];\n    C -->|Mutate| E[CRDT AST File Layer];\n```")
@@ -114,7 +114,7 @@ class DashboardApp(App):
         self.run_worker(self.listen_swarm_telemetry(), exclusive=True)
 
     def populate_registered_tools(self) -> None:
-        """Register and populate all native AgentOS tools and skills on the Skill Workbench catalog."""
+        """Register and populate all native ComputeRes tools and skills on the Skill Workbench catalog."""
         self.tools_table.cursor_type = "row"
         self.tools_table.zebra_stripes = True
         registered_items = [
@@ -125,7 +125,7 @@ class DashboardApp(App):
             ("webrtc_swarm_route", "Networking", "WebRTC Mesh", "ACTIVE"),
             ("mcp_supabase_execute_sql", "MCP Extension", "Supabase MCP", "REGISTERED"),
             ("mcp_supabase_list_tables", "MCP Extension", "Supabase MCP", "REGISTERED"),
-            ("agentos_core_skill", "Workflow Skill", "Core Orchestrator", "ACTIVE"),
+            ("compute_res_core_skill", "Workflow Skill", "Core Orchestrator", "ACTIVE"),
         ]
         for item in registered_items:
             self.tools_table.add_row(*item)

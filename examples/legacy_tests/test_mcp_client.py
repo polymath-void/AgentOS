@@ -8,7 +8,7 @@ async def trigger_organizer():
     socket = context.socket(zmq.REQ)
     socket.connect("tcp://127.0.0.1:5557")
     
-    print("MCP Client: Connecting to AgentOS Kernel...")
+    print("MCP Client: Connecting to ComputeRes Kernel...")
     
     intent = {
         "tool": "file_organizer",

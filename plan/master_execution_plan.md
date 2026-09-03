@@ -2,7 +2,7 @@
 
 ## 1. Architectural Synthesis: The Intertwined Engine
 
-The "First Breath Simulation" is the critical milestone where AgentOS transcends from theory to a living, decentralized, secure execution environment. This simulation integrates the three core pillars:
+The "First Breath Simulation" is the critical milestone where ComputeRes transcends from theory to a living, decentralized, secure execution environment. This simulation integrates the three core pillars:
 
 1.  **ZeroMQ IPC Broker (The Local Nervous System):** Acts as the high-throughput, low-latency backbone for intra-node communication. It routes messages between the WebRTC router, the MCP Gateway, and the local WASM execution engines.
 2.  **WebRTC Mesh (The Global Nervous System):** Connects disparate edge nodes into a unified computing substrate. It relies on CRDTs for state synchronization and routes requests for distributed tool execution.
@@ -134,4 +134,4 @@ The capstone test (`tests/test_first_breath.py`) will orchestrate the full stack
 7.  **Resolution**: Node B receives the votes. The CRDT tallies a 100% supermajority. Node B's `SwarmOracle` signals the local `WasmContainer`.
 8.  **Injection & Completion**: Node B dynamically maps the `/logs` capability into the paused WASI environment. Execution resumes, the file is written, and the success response bubbles back through ZeroMQ -> WebRTC -> Node A -> MCP Agent.
 
-This simulation proves the end-to-end viability of the AgentOS architecture.
+This simulation proves the end-to-end viability of the ComputeRes architecture.

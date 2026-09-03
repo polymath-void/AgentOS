@@ -1,7 +1,7 @@
-# AgentOS Zero: Zero-Dependency Deployment Blueprint
+# ComputeRes Zero: Zero-Dependency Deployment Blueprint
 
 ## Executive Summary
-AgentOS Zero is a paradigm shift in autonomous agent deployment, removing all external C-bindings and heavy dependencies. By leveraging the Python Standard Library exclusively, we achieve unprecedented portability, near-instant container startup times, and absolute compatibility across all environments (including resource-constrained edge devices and Termux environments).
+ComputeRes Zero is a paradigm shift in autonomous agent deployment, removing all external C-bindings and heavy dependencies. By leveraging the Python Standard Library exclusively, we achieve unprecedented portability, near-instant container startup times, and absolute compatibility across all environments (including resource-constrained edge devices and Termux environments).
 
 This blueprint details the architectural shift from a heavy, dependency-laden stack (pyzmq, aiortc) to a hyper-optimized, pure Python standard library implementation.
 
@@ -98,8 +98,8 @@ COPY . /app
 # No pip install needed for pure standard library implementation!
 # (Or minimal requirements if any pure-python libs remain)
 
-# Run the AgentOS kernel
-CMD ["python", "-m", "agentos.kernel"]
+# Run the ComputeRes kernel
+CMD ["python", "-m", "compute_res.kernel"]
 ```
 
 **Deployment Metrics:**
@@ -109,4 +109,4 @@ CMD ["python", "-m", "agentos.kernel"]
 - **Portability:** Will run identically on x86_64 servers, ARM64 Raspberry Pis, and Termux environments without cross-compilation nightmares.
 
 ## Conclusion
-AgentOS Zero trades the heavyweight robustness of standard IPC/RTC libraries for extreme agility, ultimate portability, and lightning-fast deployments. By strictly adhering to the Python Standard Library, we create a system that can be deployed instantly anywhere Python runs.
+ComputeRes Zero trades the heavyweight robustness of standard IPC/RTC libraries for extreme agility, ultimate portability, and lightning-fast deployments. By strictly adhering to the Python Standard Library, we create a system that can be deployed instantly anywhere Python runs.

@@ -1,9 +1,9 @@
 {
   "mcpServers": {
-    "agentos": {
+    "compute_res": {
       "command": "python3",
       "args": [
-        "/absolute/path/to/AgentOS/agentos/gateway/mcp_server.py"
+        "/absolute/path/to/ComputeRes/compute_res/gateway/mcp_server.py"
       ],
       "env": {}
     }

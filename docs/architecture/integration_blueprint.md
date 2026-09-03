@@ -1,7 +1,7 @@
-# AgentOS Integration Blueprint
+# ComputeRes Integration Blueprint
 
 ## 1. Overview
-AgentOS elevates the local agent swarm playground into a cohesive operating system layer for AI agents. This blueprint details the integration architecture for:
+ComputeRes elevates the local agent swarm playground into a cohesive operating system layer for AI agents. This blueprint details the integration architecture for:
 - Model Context Protocol (MCP) servers
 - Unified Logging system
 - Inter-Process Communication (IPC)
@@ -12,7 +12,7 @@ AgentOS elevates the local agent swarm playground into a cohesive operating syst
 ### 2.1 Model Context Protocol (MCP) Integration
 External MCP servers provide the connective tissue to specialized, out-of-process resources.
 - **MCP Daemon (`mcpd`)**: A background service that manages connections to configured MCP servers.
-- **Resource Proxying**: Transparently map MCP resources into a virtual filesystem (VFS) within AgentOS.
+- **Resource Proxying**: Transparently map MCP resources into a virtual filesystem (VFS) within ComputeRes.
 - **Tool Mapping**: Tools exposed via MCP are dynamically registered in the central Tool Registry.
 
 ### 2.2 Unified Logging (`syslog` for Agents)
@@ -36,7 +36,7 @@ A dynamic, centralized registry of all capabilities available to the swarm.
 - **Access Control**: The registry enforces permissions (e.g., sandboxed agents cannot access the `run_command` tool).
 
 ## 3. Integration Flow Example
-1. **Startup**: AgentOS starts. The Message Broker and Unified Logging services initialize.
+1. **Startup**: ComputeRes starts. The Message Broker and Unified Logging services initialize.
 2. **MCP Connection**: `mcpd` reads config, connects to a Supabase MCP server, and registers `list_tables` and `execute_sql` in the Tool Registry.
 3. **Agent Invocation**: The Orchestrator agent receives a task. It queries the Tool Registry for database tools.
 4. **Tool Execution**: Orchestrator sends an IPC message to `mcpd` requesting `execute_sql`.

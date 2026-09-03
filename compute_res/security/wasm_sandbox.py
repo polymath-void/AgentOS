@@ -19,7 +19,7 @@ class FuelExhaustedError(Exception):
 
 class AgentWasmSandbox:
     """
-    The core Security Execution Layer for AgentOS.
+    The core Security Execution Layer for ComputeRes.
     Executes raw AI agent intents inside strict WebAssembly (WASM) containers.
     Utilizes deterministic 'Fuel' metering to mathematically guarantee that 
     rogue or unoptimized intents cannot freeze the host device or drain battery.
@@ -30,9 +30,9 @@ class AgentWasmSandbox:
             self.config = Config()
             self.config.consume_fuel = True
             self.engine = Engine(self.config)
-            logger.info("Initialized AgentOS WASM Engine with Strict Fuel Metering.")
+            logger.info("Initialized ComputeRes WASM Engine with Strict Fuel Metering.")
         else:
-            logger.info("Initialized AgentOS Simulated WASM Engine.")
+            logger.info("Initialized ComputeRes Simulated WASM Engine.")
 
     def compile_intent(self, wat_code: str) -> Any:
         """Compiles WebAssembly Text (WAT) or raw AST logic into a secure Module."""
@@ -106,7 +106,7 @@ if __name__ == "__main__":
     
     # 2. A rogue / unoptimized intent containing an infinite loop.
     # If run natively, this would crash the Android kernel or drain the battery.
-    # Inside AgentOS, the Fuel Sandbox will trap and kill it mathematically.
+    # Inside ComputeRes, the Fuel Sandbox will trap and kill it mathematically.
     rogue_intent_wat = """
     (module
       (func $infinite_loop
@@ -124,4 +124,4 @@ if __name__ == "__main__":
     try:
         sandbox.execute(module_rogue, 10000, "run_rogue")
     except FuelExhaustedError as e:
-        print(f"AgentOS Sandbox Status: SECURE. \n{e}")
+        print(f"ComputeRes Sandbox Status: SECURE. \n{e}")

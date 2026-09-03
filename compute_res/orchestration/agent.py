@@ -36,7 +36,7 @@ class BaseAgent:
                     "payload": {
                         "action": "REQUEST_CAPABILITY",
                         "capability": "FS_WRITE",
-                        "target_path": f"~/.agentos/tools/evolved_skills/{tool_name}.py",
+                        "target_path": f"~/.compute_res/tools/evolved_skills/{tool_name}.py",
                         "ast_heuristic": "Safe" if "os.system" not in code else "DANGEROUS"
                     }
                 }
@@ -61,7 +61,7 @@ class BaseAgent:
                 # ----------------------------------------------------
                 
                 import os
-                evolved_path = os.path.expanduser("~/.agentos/tools/evolved_skills")
+                evolved_path = os.path.expanduser("~/.compute_res/tools/evolved_skills")
                 os.makedirs(evolved_path, exist_ok=True)
                 skill_file = os.path.join(evolved_path, f"{tool_name}.py")
                 
@@ -91,7 +91,7 @@ class BaseAgent:
         if task.startswith("SINGULARITY_TEST_EPISODIC"):
             # PROVE: Semantic Episodic Memory
             import hashlib
-            state_vector = "SYSTEM_TOPOLOGY_TENSOR_STATE: " + hashlib.sha256(b"AgentOS_Graph").hexdigest()
+            state_vector = "SYSTEM_TOPOLOGY_TENSOR_STATE: " + hashlib.sha256(b"ComputeRes_Graph").hexdigest()
             return (f"[Singularity Achieved]\n"
                     f"Episodic memory committed to local encrypted persistence.\n"
                     f"-> Vector Hash: {state_vector}\n"

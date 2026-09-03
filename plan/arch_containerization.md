@@ -1,8 +1,8 @@
-# AgentOS Containerization and Packaging Blueprint
+# ComputeRes Containerization and Packaging Blueprint
 
 ## 1. Executive Summary
 
-This document outlines the architectural blueprint for the containerization (Docker) and portable Python packaging (PyPI/Pipx) of the AgentOS ecosystem. The primary objective is to maintain strict platform independence and kernel agnosticism while seamlessly orchestrating complex dependencies, including ZeroMQ bindings, async WebRTC libraries, and WebAssembly (WASM) runtime engines.
+This document outlines the architectural blueprint for the containerization (Docker) and portable Python packaging (PyPI/Pipx) of the ComputeRes ecosystem. The primary objective is to maintain strict platform independence and kernel agnosticism while seamlessly orchestrating complex dependencies, including ZeroMQ bindings, async WebRTC libraries, and WebAssembly (WASM) runtime engines.
 
 ## 2. Core Packaging Philosophy
 
@@ -54,19 +54,19 @@ WORKDIR /app
 COPY --from=builder /build/wheels /wheels
 RUN pip install --no-cache /wheels/*
 COPY . /app
-CMD ["python", "-m", "agentos.core"]
+CMD ["python", "-m", "compute_res.core"]
 ```
 
 ## 4. Portable Python Packaging (PyPI & Pipx)
 
-The AgentOS CLI and core libraries must be installable via standard Python tools without requiring the user to install complex C-toolchains.
+The ComputeRes CLI and core libraries must be installable via standard Python tools without requiring the user to install complex C-toolchains.
 
 ### 4.1. Dependency Segregation (`pyproject.toml`)
 Define optional dependency groups to allow users to install only what they need, keeping the core lightweight.
 
 ```toml
 [project]
-name = "agentos"
+name = "compute_res"
 version = "1.0.0"
 dependencies = [
     "pyzmq>=25.0.0",
@@ -77,10 +77,10 @@ dependencies = [
 [project.optional-dependencies]
 webrtc = ["aiortc>=1.5.0", "av>=10.0.0"]
 wasm = ["wasmtime>=12.0.0"]
-all = ["agentos[webrtc,wasm]"]
+all = ["compute_res[webrtc,wasm]"]
 
 [project.scripts]
-agentos = "agentos.cli:main"
+compute_res = "compute_res.cli:main"
 ```
 
 ### 4.2. Distribution via `cibuildwheel`
@@ -94,15 +94,15 @@ To ensure platform independence (macOS, Windows, Linux) without requiring local 
 For standalone CLI usage, `pipx` is the recommended installation method. It creates an isolated virtual environment, preventing dependency conflicts with system packages.
 ```bash
 # Install core
-pipx install agentos
+pipx install compute_res
 
 # Install with WebRTC and WASM capabilities injected
-pipx install "agentos[all]"
+pipx install "compute_res[all]"
 ```
 
 ## 5. Security & Privilege Boundaries
-- **Rootless Execution**: The Docker container should define a `USER agentos` and drop root privileges immediately.
-- **WASM Sandboxing**: The WASM runtime (e.g., Wasmtime) inherently provides strict memory sandboxing and capability-based security (WASI). AgentOS must not expose the host filesystem or network to WASM modules by default.
+- **Rootless Execution**: The Docker container should define a `USER compute_res` and drop root privileges immediately.
+- **WASM Sandboxing**: The WASM runtime (e.g., Wasmtime) inherently provides strict memory sandboxing and capability-based security (WASI). ComputeRes must not expose the host filesystem or network to WASM modules by default.
 
 ## 6. Conclusion
-By leveraging Debian-slim for glibc compatibility, multi-stage Docker builds for lean images, `cibuildwheel` for native extension pre-compilation, and `pipx` for isolated execution, AgentOS achieves true platform independence. It can run on macOS laptops for local development, Linux servers for production, and ARM-based edge devices, all while securely orchestrating WebRTC and WASM workloads over a ZeroMQ backbone.
+By leveraging Debian-slim for glibc compatibility, multi-stage Docker builds for lean images, `cibuildwheel` for native extension pre-compilation, and `pipx` for isolated execution, ComputeRes achieves true platform independence. It can run on macOS laptops for local development, Linux servers for production, and ARM-based edge devices, all while securely orchestrating WebRTC and WASM workloads over a ZeroMQ backbone.

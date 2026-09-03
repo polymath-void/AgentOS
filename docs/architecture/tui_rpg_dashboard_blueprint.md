@@ -1,7 +1,7 @@
-# AgentOS OpenClaw Telemetry Dashboard Architecture Blueprint
+# ComputeRes OpenClaw Telemetry Dashboard Architecture Blueprint
 
 ## 1. Executive Summary
-This document defines the production-grade architecture of the **AgentOS OpenClaw Telemetry Dashboard** (`agentos/telemetry/tui.py`). The dashboard provides a high-fidelity, real-time, terminal-native environment for observing, orchestrating, and inspecting decentralized AI swarm node activities, WASM fuel consumption, hyperbolic vector memory queries, and dynamic skill executions.
+This document defines the production-grade architecture of the **ComputeRes OpenClaw Telemetry Dashboard** (`compute_res/telemetry/tui.py`). The dashboard provides a high-fidelity, real-time, terminal-native environment for observing, orchestrating, and inspecting decentralized AI swarm node activities, WASM fuel consumption, hyperbolic vector memory queries, and dynamic skill executions.
 
 ---
 
@@ -17,7 +17,7 @@ This document defines the production-grade architecture of the **AgentOS OpenCla
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│ AgentOS OpenClaw Frontend │ Decentralized Swarm Telemetry                   │
+│ ComputeRes OpenClaw Frontend │ Decentralized Swarm Telemetry                   │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │  [🏢 Virtual Office]    [💻 Skill Workbench]    [⚙️ System Console]           │
 ├─────────────────────────────────────────────────────────────────────────────┤
@@ -62,14 +62,14 @@ The interactive workspace for editing skills and cataloging registered system to
 1. **Active Skill Editor (`TextArea`)** (45% Width):
    - Full code editor widget with Python/YAML syntax highlighting for editing dynamic WASM skill executables. Fits perfectly to screen with `height: 1fr;`.
 2. **Registered Tools & Skills Catalog (`DataTable`)** (55% Width):
-   - Interactive table listing all native AgentOS tools and registered MCP capabilities:
+   - Interactive table listing all native ComputeRes tools and registered MCP capabilities:
      - `execute_dynamic_python` (Core WASM Execution Sandbox)
      - `hyperbolic_vector_search` (Poincaré Ball Memory Indexer)
      - `crdt_ast_mutate` (Concurrent Multi-Agent AST File Mutator)
      - `wasm_fuel_sandbox` (Capability & RAM Bounding Oracle)
      - `webrtc_swarm_route` (Decentralized Peer-to-Peer Mesh)
      - `mcp_supabase_execute_sql` & `mcp_supabase_list_tables` (Supabase MCP Integration)
-     - `agentos_core_skill` (Core Workflow Skill)
+     - `compute_res_core_skill` (Core Workflow Skill)
    - Features `zebra_stripes = True`, row cursor highlighting, and layout refresh on `TabbedContent.TabActivated` events.
 3. **Mermaid Flowchart Generator (`#mermaid_pane`)**:
    - Visual log rendering Mermaid syntax diagrams for multi-agent workflow pipelines.
@@ -84,7 +84,7 @@ The interactive workspace for editing skills and cataloging registered system to
 ## 4. ZeroMQ Async Event Pipeline & Reactive Lifecycle
 
 ```
-[AgentOS Kernel / MCP Gateway]
+[ComputeRes Kernel / MCP Gateway]
               │ (PUB tcp://127.0.0.1:5562)
               ▼
     [listen_swarm_telemetry Worker]

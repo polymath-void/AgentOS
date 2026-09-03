@@ -1,7 +1,7 @@
-# AgentOS WebRTC Signaling Architecture Blueprint
+# ComputeRes WebRTC Signaling Architecture Blueprint
 
 ## 1. Overview
-The AgentOS WebRTC Mesh requires a robust and lightweight Signaling Layer to negotiate peer-to-peer (P2P) connections between autonomous agents. This Signaling Server facilitates Swarm Matchmaking, NAT Traversal (STUN/TURN), and the exchange of Session Description Protocol (SDP) and ICE candidates. 
+The ComputeRes WebRTC Mesh requires a robust and lightweight Signaling Layer to negotiate peer-to-peer (P2P) connections between autonomous agents. This Signaling Server facilitates Swarm Matchmaking, NAT Traversal (STUN/TURN), and the exchange of Session Description Protocol (SDP) and ICE candidates. 
 
 Crucially, to maintain a truly decentralized architecture, the Signaling Server is designed to **drop out** of the communication loop the moment a P2P WebRTC `DataChannel` is successfully established.
 
@@ -12,7 +12,7 @@ Crucially, to maintain a truly decentralized architecture, the Signaling Server 
 1.  **Swarm Matchmaking:** Agents connect to the Signaling Server and declare a `swarm_id`. The server groups connections by `swarm_id` and notifies peers of new joiners.
 2.  **NAT Traversal (STUN/TURN):** Upon connection, the server provides agents with a list of active STUN/TURN servers (e.g., Google's public STUN, or a self-hosted Coturn instance) to handle complex NAT topologies.
 3.  **SDP & ICE Exchange:** The server acts as a transient message relay for `offer`, `answer`, and `ice-candidate` payloads between peers.
-4.  **Ephemeral Lifecycle:** The server does not handle any AgentOS payload data. It exists solely to bootstrap the WebRTC `RTCPeerConnection`.
+4.  **Ephemeral Lifecycle:** The server does not handle any ComputeRes payload data. It exists solely to bootstrap the WebRTC `RTCPeerConnection`.
 
 ### 2.2 Signaling Protocol (JSON over WebSockets)
 *   **Join Swarm:** `{"type": "join", "node_id": "agent-1", "swarm_id": "alpha-squad"}`
@@ -29,7 +29,7 @@ The existing `WebRTCMeshRouter` in `mesh.py` bridges the local ZeroMQ IPC broker
 2.  **Signaling Connection:** `WebRTCMeshRouter` opens a WebSocket connection to the Signaling Server and sends a `join` message with its `node_id` and `swarm_id`.
 3.  **Peer Discovery:** Upon receiving the swarm roster, the router initializes an `aiortc.RTCPeerConnection` for each peer.
 4.  **Negotiation:**
-    *   The router creates a WebRTC `RTCDataChannel` (e.g., named "agentos-mesh").
+    *   The router creates a WebRTC `RTCDataChannel` (e.g., named "compute_res-mesh").
     *   It generates an SDP Offer and sends it via the WebSocket.
     *   Peers respond with SDP Answers and ICE candidates.
 5.  **P2P DataChannel Establishment:** The ICE gathering process completes, and the P2P connection punches through the NAT.
@@ -47,4 +47,4 @@ To support this blueprint, `WebRTCMeshRouter` requires the following additions:
 *   **Reconnection Logic:** If the WebRTC `DataChannel` state changes to `closed` or `failed`, the `WebRTCMeshRouter` must wake up, reconnect to the Signaling Server, and renegotiate a new P2P connection.
 
 ## 5. Summary
-By decoupling the signaling from the actual data transmission, AgentOS achieves true decentralization. The Signaling Server is merely an ephemeral matchmaker. Once agents discover each other, they share state via the `CRDTManager` over direct WebRTC DataChannels, leaving no single point of failure in the active Swarm.
+By decoupling the signaling from the actual data transmission, ComputeRes achieves true decentralization. The Signaling Server is merely an ephemeral matchmaker. Once agents discover each other, they share state via the `CRDTManager` over direct WebRTC DataChannels, leaving no single point of failure in the active Swarm.

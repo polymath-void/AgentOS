@@ -40,13 +40,13 @@ def poincare_distance(u: HyperbolicVector, v: HyperbolicVector) -> float:
 
 class HyperbolicDB:
     """
-    The AgentOS Neuro-Symbolic Memory Vector Database.
+    The ComputeRes Neuro-Symbolic Memory Vector Database.
     Embeds ASTs and Intent graphs in Hyperbolic Space for exponentially faster
     nearest-neighbor retrieval of hierarchical data across the WebRTC mesh.
     """
     def __init__(self):
         self.registry: Dict[str, Tuple[HyperbolicVector, dict, float]] = {}
-        logger.info("Initialized AgentOS Hyperbolic DB.")
+        logger.info("Initialized ComputeRes Hyperbolic DB.")
 
     def insert(self, record_id: str, vector: List[float], metadata: dict):
         """Inserts an embedding into the CRDT-synced database registry."""

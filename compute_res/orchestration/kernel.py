@@ -8,11 +8,11 @@ import zmq.asyncio
 # Ensure project root is in PYTHONPATH
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from agentos.core.broker import IPCBroker
-from agentos.network.mesh import WebRTCMeshRouter
+from compute_res.core.broker import IPCBroker
+from compute_res.network.mesh import WebRTCMeshRouter
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] Kernel: %(message)s')
-logger = logging.getLogger("AgentOS_Kernel")
+logger = logging.getLogger("ComputeRes_Kernel")
 
 import importlib
 
@@ -56,8 +56,8 @@ async def worker_backend():
                     await socket.send_json({"status": "error", "error": str(e)})
             elif tool_name:
                 try:
-                    # Dynamically load an existing skill from agentos.tools.evolved_skills
-                    module_name = f"agentos.tools.evolved_skills.{tool_name}"
+                    # Dynamically load an existing skill from compute_res.tools.evolved_skills
+                    module_name = f"compute_res.tools.evolved_skills.{tool_name}"
                     skill_module = importlib.import_module(module_name)
                     # Force reload in case the module was updated by another dynamic process
                     importlib.reload(skill_module)
@@ -72,7 +72,7 @@ async def worker_backend():
             logger.error(f"Worker Error: {e}")
 
 async def boot_sequence():
-    logger.info("Initializing AgentOS Kernel Boot Sequence...")
+    logger.info("Initializing ComputeRes Kernel Boot Sequence...")
     
     # 1. Spin up the ZeroMQ IPC Broker
     broker = IPCBroker()
@@ -87,7 +87,7 @@ async def boot_sequence():
     asyncio.create_task(mesh_router.start())
     
     logger.info("===================================================")
-    logger.info(" AgentOS Kernel is ONLINE and fully Operational.   ")
+    logger.info(" ComputeRes Kernel is ONLINE and fully Operational.   ")
     logger.info(" - IPC Broker: Active on tcp://127.0.0.1:5557/5558 ")
     logger.info(" - WebRTC Swarm: Node PrimeNode-01 listening.      ")
     logger.info(" - WASM Sandbox: Enforcing Fuel & RAM Constraints. ")
@@ -101,7 +101,7 @@ def main():
     try:
         asyncio.run(boot_sequence())
     except KeyboardInterrupt:
-        logger.info("AgentOS Kernel Shutting Down.")
+        logger.info("ComputeRes Kernel Shutting Down.")
 
 if __name__ == "__main__":
     main()

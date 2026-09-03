@@ -8,7 +8,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'src
 from orchestration.ipc_bus import IPCBus
 
 def main():
-    parser = argparse.ArgumentParser(description="AgentOS Prime Client Terminal")
+    parser = argparse.ArgumentParser(description="ComputeRes Prime Client Terminal")
     parser.add_argument("task", nargs="+", help="The command or task to send to the Prime Agent")
     args = parser.parse_args()
     

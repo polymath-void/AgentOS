@@ -7,14 +7,14 @@ async def trigger_dynamic():
     socket = context.socket(zmq.REQ)
     socket.connect("tcp://127.0.0.1:5557")
     
-    print("MCP Client: Connecting to AgentOS Kernel...")
+    print("MCP Client: Connecting to ComputeRes Kernel...")
     
     # Send raw code dynamically without writing a physical script to the tools directory
     dynamic_code = """
 import os
 def run(name="World"):
     system_info = os.uname()
-    return f"Hello {name}! Dynamically executed on {system_info.sysname} {system_info.machine} via AgentOS."
+    return f"Hello {name}! Dynamically executed on {system_info.sysname} {system_info.machine} via ComputeRes."
 """
     
     intent = {

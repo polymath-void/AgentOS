@@ -8,7 +8,7 @@ async def trigger_full_system_insight():
     socket = context.socket(zmq.REQ)
     socket.connect("tcp://127.0.0.1:5557")
     
-    print("MCP Client: Connecting to AgentOS Kernel...")
+    print("MCP Client: Connecting to ComputeRes Kernel...")
     
     dynamic_code = """
 def run():
@@ -67,7 +67,7 @@ def run():
         "args": {}
     }
     
-    print(f"MCP Client: Sending Complete System Insight Script to AgentOS...")
+    print(f"MCP Client: Sending Complete System Insight Script to ComputeRes...")
     await socket.send_json(intent)
     
     response = await socket.recv_json()

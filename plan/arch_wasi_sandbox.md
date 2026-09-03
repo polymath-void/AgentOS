@@ -1,7 +1,7 @@
 # Advanced WASI Sandboxing Blueprint
 
 ## 1. Executive Summary
-This blueprint outlines the architectural design for extending the `WasmContainer` within the AgentOS environment to enforce advanced, mathematically verifiable resource limits. By implementing strict constraints on RAM, CPU usage (via instruction metering/fuel), and file descriptors, we guarantee that rogue AI scripts cannot crash, hang, or exhaust the host machine's resources.
+This blueprint outlines the architectural design for extending the `WasmContainer` within the ComputeRes environment to enforce advanced, mathematically verifiable resource limits. By implementing strict constraints on RAM, CPU usage (via instruction metering/fuel), and file descriptors, we guarantee that rogue AI scripts cannot crash, hang, or exhaust the host machine's resources.
 
 ## 2. Capability & Resource Constraints
 

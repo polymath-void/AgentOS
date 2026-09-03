@@ -1,7 +1,7 @@
-# QA Systems Analysis: AgentOS Deployment Architecture
+# QA Systems Analysis: ComputeRes Deployment Architecture
 
 ## Overview
-This document presents a comparative analysis of two proposed deployment architectures for the next phase build of the AgentOS platform:
+This document presents a comparative analysis of two proposed deployment architectures for the next phase build of the ComputeRes platform:
 1. **The `aiortc` Blueprint**: Leverages `python:3.10-slim-bullseye` with pre-compiled `manylinux` wheels for high-performance C-extensions like `aiortc` and `pyzmq`.
 2. **The `zero` Blueprint**: Utilizes `python:3.12-alpine` with a pure Python standard library approach, replacing heavy dependencies with custom `asyncio` TCP framing and UDP hole-punching.
 
@@ -29,4 +29,4 @@ This document presents a comparative analysis of two proposed deployment archite
 
 While the "Zero" architecture is an elegant exercise in minimalism and offers unmatched portability, it makes unacceptable compromises in Performance, Stability, and Maintainability. 
 
-A decentralized AI OS inherently requires robust, high-throughput, and low-latency communication planes for both internal IPC and external state synchronization. Re-inventing ZeroMQ and WebRTC in pure Python introduces severe bottlenecks and operational risks. The `aiortc` blueprint thoughtfully mitigates the traditional downsides of C-extensions by utilizing `manylinux` wheels and slim Debian base images, achieving near-zero compilation times while preserving the mission-critical performance of native libraries. Therefore, the `aiortc` blueprint is the fundamentally superior choice for the next phase build of AgentOS.
+A decentralized AI OS inherently requires robust, high-throughput, and low-latency communication planes for both internal IPC and external state synchronization. Re-inventing ZeroMQ and WebRTC in pure Python introduces severe bottlenecks and operational risks. The `aiortc` blueprint thoughtfully mitigates the traditional downsides of C-extensions by utilizing `manylinux` wheels and slim Debian base images, achieving near-zero compilation times while preserving the mission-critical performance of native libraries. Therefore, the `aiortc` blueprint is the fundamentally superior choice for the next phase build of ComputeRes.

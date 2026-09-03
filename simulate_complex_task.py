@@ -5,7 +5,7 @@ import random
 import sys
 
 def main():
-    print("Starting AgentOS Swarm Simulator...")
+    print("Starting ComputeRes Swarm Simulator...")
     context = zmq.Context()
     socket = context.socket(zmq.PUB)
     socket.bind("tcp://127.0.0.1:5562")

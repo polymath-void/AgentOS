@@ -1,12 +1,12 @@
-# AgentOS: The Unified Orchestrator Playground - Master Architecture Blueprint
+# ComputeRes: The Unified Orchestrator Playground - Master Architecture Blueprint
 
 ## 1. Executive Summary
 
-AgentOS is a unified operating system paradigm designed to seamlessly orchestrate multi-agent swarms. It represents a quantum leap from a fragmented playground into a cohesive, OS-level ecosystem. By unifying six core subsystems and over 18 external tool integrations, AgentOS provides a robust, recursive, and dynamic environment where autonomous agents can spawn, learn, compile, communicate, and evolve.
+ComputeRes is a unified operating system paradigm designed to seamlessly orchestrate multi-agent swarms. It represents a quantum leap from a fragmented playground into a cohesive, OS-level ecosystem. By unifying six core subsystems and over 18 external tool integrations, ComputeRes provides a robust, recursive, and dynamic environment where autonomous agents can spawn, learn, compile, communicate, and evolve.
 
 ## 2. Core Architecture Subsystems
 
-The backbone of AgentOS consists of six tightly integrated subsystems that manage the lifecycle, execution, and continuous evolution of the agent swarm.
+The backbone of ComputeRes consists of six tightly integrated subsystems that manage the lifecycle, execution, and continuous evolution of the agent swarm.
 
 ### 2.1. WASM Sandbox (Execution Layer)
 - **Role:** Provides a secure, lightweight, and language-agnostic execution environment.
@@ -14,13 +14,13 @@ The backbone of AgentOS consists of six tightly integrated subsystems that manag
 - **Integration:** Acts as the fundamental runtime for the **Meta-Compiler**'s output and is tightly controlled by the **Orchestration** layer to spin up or tear down agent processes on demand.
 
 ### 2.2. Orchestration (Control Plane)
-- **Role:** The central nervous system of AgentOS (Agent OS Hub).
+- **Role:** The central nervous system of ComputeRes (Agent OS Hub).
 - **Functionality:** Manages the lifecycle of the multi-agent swarm. It handles authentication, validation via testing harnesses, and recursive instantiation of sub-agents based on blueprints.
 - **Integration:** Routes tasks to appropriate agents, monitors **WASM Sandbox** performance, and coordinates knowledge sharing across the **P2P Mesh**.
 
 ### 2.3. P2P Mesh (Nano Neural Mesh / Connectivity Layer)
 - **Role:** Enables decentralized, high-throughput communication between agents.
-- **Functionality:** Agents within AgentOS do not rely on a single central bus for all communications. Instead, they form a peer-to-peer network to share state, synchronize tasks, and distribute workloads dynamically.
+- **Functionality:** Agents within ComputeRes do not rely on a single central bus for all communications. Instead, they form a peer-to-peer network to share state, synchronize tasks, and distribute workloads dynamically.
 - **Integration:** Ties deeply into the **Neuro-Symbolic Memory**, ensuring that knowledge learned by one agent can be rapidly propagated across the mesh to all authorized peers.
 
 ### 2.4. EvolvOS (Evolutionary Kernel)
@@ -40,7 +40,7 @@ The backbone of AgentOS consists of six tightly integrated subsystems that manag
 
 ## 3. External Tool Integrations (18+ Ecosystem Tools)
 
-AgentOS imports and abstracts a massive suite of external tools into a unified interface available to the swarm. These tools are categorized into strategic domains:
+ComputeRes imports and abstracts a massive suite of external tools into a unified interface available to the swarm. These tools are categorized into strategic domains:
 
 ### 3.1. File & FileSystem Abstractions
 - **`view_file` / `read_file`:** Safe, sandboxed reads of project structures.
@@ -70,7 +70,7 @@ AgentOS imports and abstracts a massive suite of external tools into a unified i
 3. **Execution & Sandboxing:** The generated agent logic is deployed within a secure **WASM Sandbox**. 
 4. **Tool Access:** The executing agent uses the abstracted OS tools (e.g., `search_web`, `run_command`) to interact with the environment, guided by the 18+ tool integrations.
 5. **Collaboration:** If the task is complex, the agent utilizes `invoke_subagent` and the **P2P Mesh** to distribute the workload to peer agents.
-6. **Evolution:** As tasks complete (or fail), the **EvolvOS** kernel analyzes the telemetry. It updates the **Neuro-Symbolic Memory** and refines future compilation and orchestration strategies, ensuring the AgentOS continuously improves.
+6. **Evolution:** As tasks complete (or fail), the **EvolvOS** kernel analyzes the telemetry. It updates the **Neuro-Symbolic Memory** and refines future compilation and orchestration strategies, ensuring the ComputeRes continuously improves.
 
 ## 5. Security & Validation
-Every integration within AgentOS is governed by the principle of **Knowledge-Gated Deployment**. Sub-agents cannot interact with external tools or the P2P Mesh until their WASM binaries pass strict validation harnesses located in the Orchestration layer.
+Every integration within ComputeRes is governed by the principle of **Knowledge-Gated Deployment**. Sub-agents cannot interact with external tools or the P2P Mesh until their WASM binaries pass strict validation harnesses located in the Orchestration layer.

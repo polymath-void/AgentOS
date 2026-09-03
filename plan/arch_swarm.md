@@ -1,8 +1,8 @@
-# AgentOS Decentralized AI Swarm Topology: Architectural Blueprint
+# ComputeRes Decentralized AI Swarm Topology: Architectural Blueprint
 
 ## 1. Executive Summary
 
-AgentOS is an orchestration environment natively designed for external AI agents. Lacking an internal Large Language Model (LLM), AgentOS exposes highly capable computing environments to external, specialized agents via the Model Context Protocol (MCP). The goal of the Decentralized AI Swarm Topology is to evolve the current primitive WebRTC and ZeroMQ IPC implementations into a seamless, multi-device mesh network. This allows a singular or multi-agent swarm to treat an array of edge nodes (laptops, phones, servers) as a cohesive computational substrate.
+ComputeRes is an orchestration environment natively designed for external AI agents. Lacking an internal Large Language Model (LLM), ComputeRes exposes highly capable computing environments to external, specialized agents via the Model Context Protocol (MCP). The goal of the Decentralized AI Swarm Topology is to evolve the current primitive WebRTC and ZeroMQ IPC implementations into a seamless, multi-device mesh network. This allows a singular or multi-agent swarm to treat an array of edge nodes (laptops, phones, servers) as a cohesive computational substrate.
 
 ## 2. Core Tenets
 
@@ -45,7 +45,7 @@ The Swarm state (e.g., list of active nodes, shared memory blocks, distributed f
 - **Why?** CRDTs allow any node to update local state immediately. Updates are broadcasted via the WebRTC gossip protocol. Concurrent updates mathematically resolve without conflicts, ensuring identical state across the Swarm.
 
 ### 5.2 ZeroMQ IPC Bus (Intra-Node)
-On a single physical device, the AgentOS daemon, the WebRTC mesh router, and the local MCP resource handlers communicate via ZeroMQ `REQ/REP` and `PUB/SUB` sockets. 
+On a single physical device, the ComputeRes daemon, the WebRTC mesh router, and the local MCP resource handlers communicate via ZeroMQ `REQ/REP` and `PUB/SUB` sockets. 
 - The **WebRTC Router** receives a CRDT state update from a remote node.
 - It publishes the update on a local ZeroMQ `PUB` socket.
 - The **Local State Manager** subscribes to this update, merges the CRDT, and updates the local representation.

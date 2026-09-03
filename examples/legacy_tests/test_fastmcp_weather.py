@@ -8,7 +8,7 @@ async def run_weather_experiment():
     
     server_params = StdioServerParameters(
         command="python3",
-        args=["agentos/gateway/mcp_server.py"],
+        args=["compute_res/gateway/mcp_server.py"],
         env=None
     )
     
@@ -40,7 +40,7 @@ def run():
         # 1. Collect Data via Open-Meteo API
         for city, (lat, lon) in cities.items():
             url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current=temperature_2m,precipitation&timezone=Asia%2FTokyo"
-            req = urllib.request.Request(url, headers={'User-Agent': 'AgentOS/1.0'})
+            req = urllib.request.Request(url, headers={'User-Agent': 'ComputeRes/1.0'})
             with urllib.request.urlopen(req) as response:
                 data = json.loads(response.read().decode())
                 current = data.get("current", {})
@@ -54,7 +54,7 @@ def run():
         high_rain_zone = max(results.items(), key=lambda x: x[1]["rain"])
         
         # 3. Generate the Report
-        report_path = os.path.expanduser("~/storage/shared/Documents/AgentOS_Asia_Weather_Analysis.txt")
+        report_path = os.path.expanduser("~/storage/shared/Documents/ComputeRes_Asia_Weather_Analysis.txt")
         with open(report_path, "w") as f:
             f.write("=== AGENT-OS ASIA WEATHER ANALYSIS ===\n\n")
             f.write("Raw Telemetry:\n")
@@ -84,7 +84,7 @@ def run():
                 }
             )
             
-            print(f"\nAI Agent: Received Execution Result from AgentOS:")
+            print(f"\nAI Agent: Received Execution Result from ComputeRes:")
             print(f"-> {result.content[0].text}")
 
 if __name__ == "__main__":

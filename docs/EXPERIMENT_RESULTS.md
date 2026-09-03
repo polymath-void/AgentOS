@@ -1,8 +1,8 @@
-# AgentOS Experimental Validation Logs
+# ComputeRes Experimental Validation Logs
 
-This document serves as the official historical record of the real-world, dynamic capability tests conducted on the AgentOS Kernel via the Model Context Protocol (MCP).
+This document serves as the official historical record of the real-world, dynamic capability tests conducted on the ComputeRes Kernel via the Model Context Protocol (MCP).
 
-All tests below were injected dynamically by an external AI Agent as raw strings of Python code, compiled in memory by the AgentOS Kernel, and executed natively on the physical edge device (Android/Linux).
+All tests below were injected dynamically by an external AI Agent as raw strings of Python code, compiled in memory by the ComputeRes Kernel, and executed natively on the physical edge device (Android/Linux).
 
 ---
 
@@ -13,7 +13,7 @@ All tests below were injected dynamically by an external AI Agent as raw strings
 - Extracted the physical hardware time natively from the C kernel.
 **Result:** `SUCCESS`
 **Telemetry Output:**
-> "AgentOS Payload Execution Successful: Direct memory linkage established. Hardware time extracted from libc.so: 1725301824"
+> "ComputeRes Payload Execution Successful: Direct memory linkage established. Hardware time extracted from libc.so: 1725301824"
 
 ---
 
@@ -24,7 +24,7 @@ All tests below were injected dynamically by an external AI Agent as raw strings
 - Executed `uname -a` to get kernel identifiers.
 **Result:** `SUCCESS`
 **Telemetry Output:**
-> "Successfully extracted network telemetry (192.168.0.119) and wrote physical report to ~/storage/shared/Documents/AgentOS_Network_Intel.txt"
+> "Successfully extracted network telemetry (192.168.0.119) and wrote physical report to ~/storage/shared/Documents/ComputeRes_Network_Intel.txt"
 > "Kernel Info: Linux localhost 5.15.189-android13-8... aarch64 GNU/Linux"
 
 ---
@@ -37,7 +37,7 @@ All tests below were injected dynamically by an external AI Agent as raw strings
 - Wrote a formatted intelligence report to the Android `Documents` folder.
 **Result:** `SUCCESS`
 **Telemetry Output:**
-> "Weather analysis complete. High Heat: Dubai. Saved to /data/data/com.termux/files/home/storage/shared/Documents/AgentOS_Asia_Weather_Analysis.txt"
+> "Weather analysis complete. High Heat: Dubai. Saved to /data/data/com.termux/files/home/storage/shared/Documents/ComputeRes_Asia_Weather_Analysis.txt"
 *(Dubai logged at 34.0°C, Manila logged at 0.5mm precipitation).*
 
 ---
@@ -47,7 +47,7 @@ All tests below were injected dynamically by an external AI Agent as raw strings
 **Agent Payload Scope:**
 - Spawns a background `threading.Thread(daemon=True)`.
 - Boots Python's `http.server.SimpleHTTPRequestHandler`.
-- Hosts a dynamic HTML dashboard visualizing the AgentOS node status.
+- Hosts a dynamic HTML dashboard visualizing the ComputeRes node status.
 **Result:** `SUCCESS`
 **Telemetry Output:**
 > "SUCCESS: Memory-Resident Web Server deployed. Dashboard live at http://192.168.0.119:8080"
@@ -67,4 +67,4 @@ All tests below were injected dynamically by an external AI Agent as raw strings
 
 ---
 
-*These experiments definitively validate AgentOS as a Turing-complete, physically unrestricted execution environment capable of extending AI reasoning into physical, networked reality.*
+*These experiments definitively validate ComputeRes as a Turing-complete, physically unrestricted execution environment capable of extending AI reasoning into physical, networked reality.*

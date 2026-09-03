@@ -1,7 +1,7 @@
-# AgentOS Absolute Sandboxing: Architectural Blueprint
+# ComputeRes Absolute Sandboxing: Architectural Blueprint
 
 ## 1. Executive Summary: The Imperative for Absolute Sandboxing
-AgentOS is an environment engineered for AI agents. With external agents connecting via the Model Context Protocol (MCP), mutating the codebase autonomously, and executing evolved tools, the risk of catastrophic system compromise is non-trivial. Running dynamically evolved tools directly in the native Python environment is an unacceptable security posture. 
+ComputeRes is an environment engineered for AI agents. With external agents connecting via the Model Context Protocol (MCP), mutating the codebase autonomously, and executing evolved tools, the risk of catastrophic system compromise is non-trivial. Running dynamically evolved tools directly in the native Python environment is an unacceptable security posture. 
 
 This blueprint defines the architecture for **Absolute Sandboxing**, leveraging WebAssembly (WASM) and the WebAssembly System Interface (WASI) to create hermetically sealed, dynamically restricted execution containers. The core innovation lies in coupling these containers with a Swarm Consensus Mechanism, ensuring that filesystem and network capabilities are granted or revoked dynamically based on the collective agreement of the agent swarm.
 
@@ -19,20 +19,20 @@ The MCP gateway acts as the ingress/egress point for external agents.
 EvolvOS, the dynamic tool generation and execution engine, must be strictly isolated.
 - **Pre-compilation**: Dynamically generated Python/Rust/JS tools must be compiled to WASM before execution.
 - **Ephemeral Modules**: Every execution of an evolved tool runs in an ephemeral, single-use WASM container.
-- **Memory Isolation**: WASM's linear memory model ensures that an evolved tool cannot read or write memory outside its designated sandbox, preventing lateral movement within AgentOS.
+- **Memory Isolation**: WASM's linear memory model ensures that an evolved tool cannot read or write memory outside its designated sandbox, preventing lateral movement within ComputeRes.
 
 ## 3. Dynamic Capability Restriction via WASI
 
 WASM alone only isolates computation and memory. To manage interaction with the host (filesystem, network), we utilize WASI.
 
 ### 3.1 Capability-Based Security Model
-AgentOS will abandon traditional Discretionary Access Control (DAC) in favor of a Capability-Based Security model enforced by WASI.
+ComputeRes will abandon traditional Discretionary Access Control (DAC) in favor of a Capability-Based Security model enforced by WASI.
 - Tools are granted access *only* to specific file descriptors (directories) or network sockets explicitly passed to them at instantiation.
 - There is no ambient authority (e.g., no access to `/root` or `/etc` just because the host process has it).
 
 ### 3.2 Granular Filesystem Virtualization
 - **Virtual Root**: Each WASM container sees a virtualized root filesystem (`/`).
-- **Dynamic Mounting**: Host directories (e.g., `/Projects/AgentOS/src`) are mapped into the container's virtual filesystem based on current capabilities.
+- **Dynamic Mounting**: Host directories (e.g., `/Projects/ComputeRes/src`) are mapped into the container's virtual filesystem based on current capabilities.
 - **Read/Write Segmentation**: A tool designed to analyze logs will only be granted a read-only capability to the logs directory, enforced at the WASI boundary.
 
 ### 3.3 Network Egress Filtering
@@ -59,7 +59,7 @@ Consensus is continuously evaluated. If a monitoring agent detects anomalous beh
 ## 5. Implementation Roadmap
 
 - **Phase 1: Foundation (Weeks 1-4)**
-  - Integrate a WASM runtime (e.g., Wasmtime) into the core Python AgentOS loop.
+  - Integrate a WASM runtime (e.g., Wasmtime) into the core Python ComputeRes loop.
   - Port the MCP Gateway to act as a WASM host.
 - **Phase 2: WASI Integration (Weeks 5-8)**
   - Implement the capability-based filesystem mapping for ephemeral tool execution.
@@ -72,4 +72,4 @@ Consensus is continuously evaluated. If a monitoring agent detects anomalous beh
   - Conduct red-team penetration testing against the Swarm Consensus logic.
 
 ## 6. Conclusion
-By wrapping the MCP gateway and EvolvOS logic within WASM containers, and governing their WASI capabilities through Swarm Consensus, AgentOS transitions from a vulnerable execution environment to an impenetrable, self-regulating, and dynamically secure AI operating system.
+By wrapping the MCP gateway and EvolvOS logic within WASM containers, and governing their WASI capabilities through Swarm Consensus, ComputeRes transitions from a vulnerable execution environment to an impenetrable, self-regulating, and dynamically secure AI operating system.

@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "compute-res"
 version = "1.0.0"
-description = "AgentOS High-Performance Swarm Ecosystem"
+description = "ComputeRes High-Performance Swarm Ecosystem"
 readme = "README.md"
 authors = [{ name = "Polymath Void", email = "shuvops@gmail.com" }]
 requires-python = ">=3.10"
@@ -19,8 +19,8 @@ dependencies = [
 ]
 
 [project.scripts]
-agentos = "agentos.orchestration.kernel:main"
+compute_res = "compute_res.orchestration.kernel:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["agentos*"]
+include = ["compute_res*"]

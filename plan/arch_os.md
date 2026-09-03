@@ -1,7 +1,7 @@
-# AgentOS: Core Execution Layer Architecture Blueprint
+# ComputeRes: Core Execution Layer Architecture Blueprint
 
 ## 1. Abstract
-AgentOS is the underlying environment for external AI agents, exposed entirely via the Model Context Protocol (MCP). It is a headless, brainless substrate where agents act as the intelligence piloting the system. This blueprint details the Core Execution Layer, specifically focusing on the translation of MCP logical intents to ZeroMQ (0MQ) IPC messages and the real-time dynamic exposure of hot-loaded skills via the MCP Gateway.
+ComputeRes is the underlying environment for external AI agents, exposed entirely via the Model Context Protocol (MCP). It is a headless, brainless substrate where agents act as the intelligence piloting the system. This blueprint details the Core Execution Layer, specifically focusing on the translation of MCP logical intents to ZeroMQ (0MQ) IPC messages and the real-time dynamic exposure of hot-loaded skills via the MCP Gateway.
 
 ## 2. Core Execution Layer: Component Architecture
 - **External AI Agent**: The "brain" connecting via MCP.
@@ -25,13 +25,13 @@ When an external agent decides to act, it formulates an intent as an MCP `execut
 5. **Resolution**: Upon completion, the worker replies back through the Broker to the Gateway, which unpacks the Payload and maps it back to an MCP JSON-RPC Response.
 
 ### 3.2. Asynchronous Streaming and Long-Running Intents
-Agents often initiate tasks that take time (e.g., training a model, scanning a large directory). AgentOS maps these to asynchronous ZeroMQ Pub/Sub patterns.
+Agents often initiate tasks that take time (e.g., training a model, scanning a large directory). ComputeRes maps these to asynchronous ZeroMQ Pub/Sub patterns.
 - **Execution UUIDs**: Every request gets a unique task ID.
 - **Progress Streams**: The Gateway subscribes to a ZeroMQ `PUB` socket (`Topic: stream.<UUID>`). As the worker emits stdout/stderr or custom progress events, the Gateway forwards these to the agent via MCP custom notifications or resource updates.
 
 ## 4. Real-time Capability Exposure via SkillRegistry
 
-A defining feature of AgentOS is its ability to mutate its capability surface area in real-time. The registry hot-loads python scripts and immediately exposes them as new MCP tools.
+A defining feature of ComputeRes is its ability to mutate its capability surface area in real-time. The registry hot-loads python scripts and immediately exposes them as new MCP tools.
 
 ### 4.1. The Hot-loading Lifecycle
 1. **FS Event / Ingestion**: The SkillRegistry monitors a `/skills` directory via `inotify` or provides a ZeroMQ endpoint for skill ingestion.

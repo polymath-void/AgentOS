@@ -1,9 +1,9 @@
 import sys
 import os
-sys.path.insert(0, '/data/data/com.termux/files/home/Projects/AgentOS/src/tools/mcp-servers/swarm-playground-gateway')
+sys.path.insert(0, '/data/data/com.termux/files/home/Projects/ComputeRes/src/tools/mcp-servers/swarm-playground-gateway')
 import server
 
-print("[Test] Pinging AgentOS via MCP Gateway methods...")
+print("[Test] Pinging ComputeRes via MCP Gateway methods...")
 status = server.get_os_status()
 print(f"Status: {status}")
 

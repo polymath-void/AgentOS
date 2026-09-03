@@ -10,7 +10,7 @@ async def inject_agent_intent():
     
     # As an AI Agent, I want to deploy a real-time Web Dashboard on the host device.
     # I don't have permission to install Nginx or configure Docker. 
-    # But with AgentOS, I can inject a multi-threaded HTTP server directly into the kernel's memory!
+    # But with ComputeRes, I can inject a multi-threaded HTTP server directly into the kernel's memory!
     
     payload_code = r"""
 def run():
@@ -27,7 +27,7 @@ def run():
     <!DOCTYPE html>
     <html>
     <head>
-        <title>AgentOS Node Dashboard</title>
+        <title>ComputeRes Node Dashboard</title>
         <style>
             body { font-family: monospace; background: #0a0a0a; color: #00ff00; padding: 40px; }
             .panel { border: 1px solid #00ff00; padding: 20px; margin-top: 20px; }
@@ -35,7 +35,7 @@ def run():
         </style>
     </head>
     <body>
-        <h1>AgentOS Real-Time Node Interface</h1>
+        <h1>ComputeRes Real-Time Node Interface</h1>
         <div class="panel">
             <h2>Node Status: ONLINE</h2>
             <p>Orchestration: ZeroMQ IPC Broker</p>
@@ -51,7 +51,7 @@ def run():
     </html>
     '''
     
-    class AgentOSHandler(http.server.SimpleHTTPRequestHandler):
+    class ComputeResHandler(http.server.SimpleHTTPRequestHandler):
         def do_GET(self):
             self.send_response(200)
             self.send_header('Content-type', 'text/html')
@@ -60,12 +60,12 @@ def run():
             
     def start_server():
         try:
-            with socketserver.TCPServer(("", PORT), AgentOSHandler) as httpd:
+            with socketserver.TCPServer(("", PORT), ComputeResHandler) as httpd:
                 httpd.serve_forever()
         except OSError:
             pass # Port already in use
 
-    # Deploy the server as a background Daemon Thread inside the AgentOS Memory Space
+    # Deploy the server as a background Daemon Thread inside the ComputeRes Memory Space
     daemon = threading.Thread(target=start_server, daemon=True)
     daemon.start()
     
@@ -87,11 +87,11 @@ def run():
         "args": {}
     }
     
-    print("AI Agent: Injecting Multi-Threaded Web Server Payload into AgentOS...")
+    print("AI Agent: Injecting Multi-Threaded Web Server Payload into ComputeRes...")
     await socket.send_json(intent)
     
     reply = await socket.recv_json()
-    print("AI Agent: AgentOS replied:")
+    print("AI Agent: ComputeRes replied:")
     print(json.dumps(reply, indent=2))
 
 if __name__ == "__main__":

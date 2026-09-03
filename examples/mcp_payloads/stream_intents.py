@@ -8,7 +8,7 @@ def stream_mock_intents():
     socket = context.socket(zmq.REQ)
     socket.connect("tcp://127.0.0.1:5557")
     
-    print("Intent Streamer: Connected to AgentOS Kernel (ROUTER tcp://127.0.0.1:5557)")
+    print("Intent Streamer: Connected to ComputeRes Kernel (ROUTER tcp://127.0.0.1:5557)")
     
     intents = [
         {"code": "def run():\n    print('summit')\n    return True", "args": {}},

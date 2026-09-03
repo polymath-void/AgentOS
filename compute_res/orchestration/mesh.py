@@ -7,11 +7,11 @@ from aiortc import RTCPeerConnection, RTCSessionDescription, RTCConfiguration, R
 logger = logging.getLogger("WebRTCMesh")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 
-class AgentOSMeshRouter:
+class ComputeResMeshRouter:
     """
     The Decentralized WebRTC Mesh Overlay.
     Bypasses centralized cloud infrastructure entirely by using STUN/TURN UDP hole-punching.
-    Establishes raw SCTP DataChannels between global AgentOS nodes, creating an invisible,
+    Establishes raw SCTP DataChannels between global ComputeRes nodes, creating an invisible,
     un-blockable P2P fabric for the ZeroMQ Federation to ride upon.
     """
     def __init__(self, swarm_id: str):
@@ -31,7 +31,7 @@ class AgentOSMeshRouter:
         self.peers[target_node_id] = pc
 
         # Create the raw data channel for ZeroMQ intent piping
-        channel = pc.createDataChannel(f"agentos_ipc_{self.swarm_id}")
+        channel = pc.createDataChannel(f"compute_res_ipc_{self.swarm_id}")
         
         @channel.on("open")
         def on_open():
@@ -85,10 +85,10 @@ class AgentOSMeshRouter:
 
 async def simulate_decentralized_mesh():
     # Node A is a phone in Brazil on a mobile network
-    node_a = AgentOSMeshRouter(swarm_id="Global-Alpha")
+    node_a = ComputeResMeshRouter(swarm_id="Global-Alpha")
     
     # Node B is a laptop in Germany behind a strict corporate firewall
-    node_b = AgentOSMeshRouter(swarm_id="Global-Alpha")
+    node_b = ComputeResMeshRouter(swarm_id="Global-Alpha")
     
     # 1. Brazil generates an offer (Normally exchanged via a tiny signaling server)
     offer = await node_a.create_offer(target_node_id=node_b.node_id)

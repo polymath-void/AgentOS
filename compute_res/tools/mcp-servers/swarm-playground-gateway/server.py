@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-AgentOS Gateway — MCP Server (Pure Python Stdio)
+ComputeRes Gateway — MCP Server (Pure Python Stdio)
 
-Exposes the AgentOS unified operating system via MCP,
+Exposes the ComputeRes unified operating system via MCP,
 allowing external AI agents to send direct commands to the Prime Agent
 via the ZeroMQ IPC Bus.
 
@@ -13,17 +13,17 @@ import json
 import sys
 import os
 
-# Inject AgentOS src into path to import IPC Bus
-sys.path.insert(0, '/data/data/com.termux/files/home/Projects/AgentOS/agentos')
+# Inject ComputeRes src into path to import IPC Bus
+sys.path.insert(0, '/data/data/com.termux/files/home/Projects/ComputeRes/compute_res')
 try:
-    from agentos.orchestration.ipc_bus import IPCBus
+    from compute_res.orchestration.ipc_bus import IPCBus
 except ImportError:
     IPCBus = None
 
 def dispatch_to_os(task_string: str) -> dict:
-    """Send a command directly to the AgentOS Prime Agent via IPC."""
+    """Send a command directly to the ComputeRes Prime Agent via IPC."""
     if not IPCBus:
-        return {"error": "IPCBus module not found. Is AgentOS installed correctly?"}
+        return {"error": "IPCBus module not found. Is ComputeRes installed correctly?"}
         
     ipc = IPCBus()
     ipc.connect()
@@ -53,7 +53,7 @@ def handle_request(req: dict) -> dict:
             "capabilities": {
                 "tools": {}
             },
-            "serverInfo": {"name": "agentos-gateway", "version": "1.0.0"}
+            "serverInfo": {"name": "compute_res-gateway", "version": "1.0.0"}
         }
     
     elif method == "tools/list":
@@ -61,7 +61,7 @@ def handle_request(req: dict) -> dict:
             "tools": [
                 {
                     "name": "execute_os_command",
-                    "description": "Execute a high-level orchestration command on the AgentOS Prime Agent.",
+                    "description": "Execute a high-level orchestration command on the ComputeRes Prime Agent.",
                     "inputSchema": {
                         "type": "object",
                         "properties": {"command": {"type": "string"}},
@@ -70,7 +70,7 @@ def handle_request(req: dict) -> dict:
                 },
                 {
                     "name": "get_os_status",
-                    "description": "Check if the AgentOS IPC Bus is online and responding.",
+                    "description": "Check if the ComputeRes IPC Bus is online and responding.",
                     "inputSchema": {"type": "object", "properties": {}}
                 }
             ]

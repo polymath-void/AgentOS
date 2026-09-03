@@ -9,7 +9,7 @@ OUTPUT_PATH = os.path.expanduser("~/Projects/polymath-void-profile/PROJECT_PROGR
 
 # Define our core projects and their estimated "total milestones" for a rough percentage
 CORE_PROJECTS = {
-    "AgentOS-mcp-server": {"target_commits": 100, "phase": "Beta / Production-Ready"},
+    "ComputeRes-mcp-server": {"target_commits": 100, "phase": "Beta / Production-Ready"},
     "github-cli-management-and-repo_watcher": {"target_commits": 50, "phase": "Active Development"},
     "antigravity-cli-mcp-server": {"target_commits": 80, "phase": "Initial Release"},
     "polymath-native-ai": {"target_commits": 200, "phase": "Research & Implementation"},
@@ -84,7 +84,7 @@ def generate_report():
             if progress_pct < 10: progress_pct = 25 # Minimum floor for initialized projects
             
         # Hardcode some realistic progress based on our recent work
-        if proj == "AgentOS-mcp-server": progress_pct = 95
+        if proj == "ComputeRes-mcp-server": progress_pct = 95
         if proj == "github-cli-management-and-repo_watcher": progress_pct = 85
         if proj == "antigravity-cli-mcp-server": progress_pct = 90
 

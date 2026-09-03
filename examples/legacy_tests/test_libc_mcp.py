@@ -8,7 +8,7 @@ async def trigger_raw_computing():
     socket = context.socket(zmq.REQ)
     socket.connect("tcp://127.0.0.1:5557")
     
-    print("MCP Client: Connecting to AgentOS Kernel...")
+    print("MCP Client: Connecting to ComputeRes Kernel...")
     
     # Send highly advanced raw code that utilizes ctypes to talk directly to the Bionic C Library
     dynamic_code = """
@@ -68,7 +68,7 @@ def run():
         "args": {}
     }
     
-    print(f"MCP Client: Sending Bare-Metal C-Types Script to AgentOS...")
+    print(f"MCP Client: Sending Bare-Metal C-Types Script to ComputeRes...")
     await socket.send_json(intent)
     
     response = await socket.recv_json()

@@ -8,7 +8,7 @@ async def trigger_optimized_hardware():
     socket = context.socket(zmq.REQ)
     socket.connect("tcp://127.0.0.1:5557")
     
-    print("MCP Client: Connecting to AgentOS Kernel...")
+    print("MCP Client: Connecting to ComputeRes Kernel...")
     
     # Send highly optimized raw code to bypass Android 11+ /proc/ restrictions
     dynamic_code = """
@@ -63,7 +63,7 @@ def run():
         "args": {}
     }
     
-    print(f"MCP Client: Sending Optimized Dynamic Script to AgentOS...")
+    print(f"MCP Client: Sending Optimized Dynamic Script to ComputeRes...")
     await socket.send_json(intent)
     
     response = await socket.recv_json()

@@ -3,15 +3,15 @@ import sys
 import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from src.client.mcp_client import AgentOSClient
+from src.client.mcp_client import ComputeResClient
 
 async def test_live_connection():
     print("\n--- INITIATING LIVE KERNEL TEST ---")
     
     # Instantiate the Standalone Client (Simulating an external LLM)
-    client = AgentOSClient()
+    client = ComputeResClient()
     
-    print("[LLM Client] Connecting to AgentOS Gateway via ZeroMQ...")
+    print("[LLM Client] Connecting to ComputeRes Gateway via ZeroMQ...")
     
     # We will simulate the LLM issuing an intent to execute a tool.
     tool_intent = "system_diagnostic"

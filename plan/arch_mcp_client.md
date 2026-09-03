@@ -1,21 +1,21 @@
-# AgentOS MCP Standalone Client: Architectural Blueprint
+# ComputeRes MCP Standalone Client: Architectural Blueprint
 
 ## 1. Overview
-The MCP Standalone Client acts as the critical bridge connecting any external AI Agent (the "Brain") to the AgentOS ecosystem. Its primary responsibility is to manage the Model Context Protocol (MCP) lifecycle: connection establishment, tool discovery (JSON Schema parsing), and execution routing via the AgentOS Gateway (`mcp_server.py`). 
+The MCP Standalone Client acts as the critical bridge connecting any external AI Agent (the "Brain") to the ComputeRes ecosystem. Its primary responsibility is to manage the Model Context Protocol (MCP) lifecycle: connection establishment, tool discovery (JSON Schema parsing), and execution routing via the ComputeRes Gateway (`mcp_server.py`). 
 
 By strictly isolating protocol mechanics, the client ensures the LLM's prompt logic, reasoning, and memory remain entirely decoupled from the underlying execution infrastructure and ZeroMQ broker.
 
 ## 2. Core Architecture
 
 The Standalone Client consists of three main modules:
-- **Transport Layer (Connection Manager):** Handles the I/O stream (e.g., Stdio subprocess piping, or WebSockets/SSE) to communicate natively with the AgentOS Gateway.
-- **Discovery Engine:** Requests, parses, and normalizes the JSON Schemas for available tools provided by AgentOS.
+- **Transport Layer (Connection Manager):** Handles the I/O stream (e.g., Stdio subprocess piping, or WebSockets/SSE) to communicate natively with the ComputeRes Gateway.
+- **Discovery Engine:** Requests, parses, and normalizes the JSON Schemas for available tools provided by ComputeRes.
 - **Execution Engine:** Formats JSON-RPC 2.0 requests for tool invocation, dispatches them to the Gateway, and processes synchronous or asynchronous responses.
 
 ## 3. Protocol Mechanics & Message Flow
 
 ### 3.1. Connection & Initialization
-1. **Client Spawn/Connect:** The client initializes a connection to the AgentOS `MCPGateway`. Depending on the deployment, this involves spawning `mcp_server.py` as a subprocess communicating over `stdin`/`stdout`, or connecting to an exposed network socket.
+1. **Client Spawn/Connect:** The client initializes a connection to the ComputeRes `MCPGateway`. Depending on the deployment, this involves spawning `mcp_server.py` as a subprocess communicating over `stdin`/`stdout`, or connecting to an exposed network socket.
 2. **Handshake:** The client sends an `initialize` JSON-RPC request to negotiate protocol version and capabilities.
 3. **Acknowledgment:** The Gateway responds with its supported features, officially acknowledging the `tools` capability.
 
@@ -48,10 +48,10 @@ The Standalone Client consists of three main modules:
 The client exposes a highly abstracted API intended for the LLM's executor loop. The "Brain" only interacts with this clean interface.
 
 ```python
-class AgentOSMCPClient:
+class ComputeResMCPClient:
     async def connect(self) -> None:
         """
-        Establishes transport connection to the AgentOS Gateway.
+        Establishes transport connection to the ComputeRes Gateway.
         Handles the JSON-RPC 'initialize' handshake.
         """
         pass

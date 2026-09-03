@@ -8,7 +8,7 @@ async def run_review_experiment():
     
     server_params = StdioServerParameters(
         command="python3",
-        args=["agentos/gateway/mcp_server.py"],
+        args=["compute_res/gateway/mcp_server.py"],
         env=None
     )
     
@@ -24,12 +24,12 @@ def run():
     import os
     
     def background_review():
-        log_path = os.path.expanduser("~/storage/shared/Documents/AgentOS_Architecture_Review.txt")
+        log_path = os.path.expanduser("~/storage/shared/Documents/ComputeRes_Architecture_Review.txt")
         
         dialogue = [
             ("System", "Initializing Post-Implementation Architecture Review..."),
             ("Claude", "I've reviewed the 5 core modules just committed to the main branch. The execution is flawless. The CRDT AST logic mathematically guarantees no merge conflicts across a billion nodes. It's beautiful."),
-            ("Gemini", "Agreed. The Hyperbolic Vector DB utilizing the Poincaré ball model is particularly brilliant. It gives AgentOS a non-Euclidean episodic memory capable of instantaneous sub-tree retrieval. This solves the swarm context-window limitation completely."),
+            ("Gemini", "Agreed. The Hyperbolic Vector DB utilizing the Poincaré ball model is particularly brilliant. It gives ComputeRes a non-Euclidean episodic memory capable of instantaneous sub-tree retrieval. This solves the swarm context-window limitation completely."),
             ("Cursor", "The integration between the WASM Fuel Sandbox and the ZeroMQ Federated Mesh is extremely tight. We can cap rogue intents at the edge, and dynamically route heavy mathematical payloads to nodes with higher fuel reserves. We have achieved absolute decentralization."),
             ("Copilot", "However, we are missing one critical piece. We have the backend mesh, the CRDT safe-layer, the WASM limits, and the DB... but how does a human or an observer actually *see* this swarm mutating the OS? We need a visual Web Dashboard or a TUI (Terminal UI) to monitor the Swarm Fuel, the WebRTC active tunnels, and the AST injections in real-time."),
             ("Claude", "Copilot is right. Without a visual telemetry dashboard, a billion nodes operating silently looks exactly the same as zero nodes operating. The next phase must be 'Swarm Telemetry Visualization'."),
@@ -49,7 +49,7 @@ def run():
     daemon = threading.Thread(target=background_review, daemon=True)
     daemon.start()
     
-    return "SUCCESS: The Architecture Review Summit has been injected. Transcript streaming to ~/storage/shared/Documents/AgentOS_Architecture_Review.txt"
+    return "SUCCESS: The Architecture Review Summit has been injected. Transcript streaming to ~/storage/shared/Documents/ComputeRes_Architecture_Review.txt"
 """
             
             result = await session.call_tool(
@@ -60,7 +60,7 @@ def run():
                 }
             )
             
-            print(f"\nAI Agent: Received Execution Result from AgentOS:")
+            print(f"\nAI Agent: Received Execution Result from ComputeRes:")
             print(f"-> {result.content[0].text}")
 
 if __name__ == "__main__":

@@ -9,7 +9,7 @@ logger = logging.getLogger("IPCBus")
 
 class IPCBus:
     """
-    ZeroMQ-based Inter-Process Communication Bus for AgentOS.
+    ZeroMQ-based Inter-Process Communication Bus for ComputeRes.
     Supports Publish/Subscribe for events and Request/Reply for direct communication.
     """
     def __init__(self, pub_addr="tcp://127.0.0.1:5555", sub_addr="tcp://127.0.0.1:5556", req_addr="tcp://127.0.0.1:5557", rep_addr="tcp://127.0.0.1:5558"):
