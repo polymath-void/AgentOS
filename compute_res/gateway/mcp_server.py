@@ -202,7 +202,169 @@ async def invoke_compute_res_skill(skill_name: str, args: str = "{}") -> str:
     logger.info(f"Routing skill invocation '{skill_name}' to ComputeRes Kernel...")
     return await send_to_kernel(intent)
 
+# ─────────────────────────────────────────────────────────────
+# SkillsHub — Skills Routing Protocol tools
+# ─────────────────────────────────────────────────────────────
+
+@mcp.tool()
+async def publish_skill(
+    name: str,
+    description: str,
+    author: str,
+    version: str,
+    code: str,
+    categories: str = "[]",
+    tags: str = "[]",
+) -> str:
+    """
+    Publish a new skill to the ComputeRes SkillsHub DB and broadcast it to the swarm.
+    Other agents subscribed to the Skills Routing Protocol will be notified instantly.
+
+    Args:
+        name: Unique skill identifier (snake_case recommended).
+        description: What this skill does.
+        author: The agent publishing the skill (e.g. "Claude-3.5", "Gemini-Pro").
+        version: Semantic version string, e.g. "1.0.0".
+        code: Full Python source code for the skill. Must contain a `def run(**kwargs):` block.
+        categories: JSON array of niche categories, e.g. '["data_analysis", "web_scraping"]'.
+        tags: JSON array of fine-grained tags, e.g. '["sqlite", "pandas"]'.
+    """
+    try:
+        cats = json.loads(categories)
+        tag_list = json.loads(tags)
+    except json.JSONDecodeError:
+        return "Error: 'categories' and 'tags' must be valid JSON arrays."
+
+    # Step 1: Persist the skill code to the evolved_skills directory
+    safe_name = name.replace(" ", "_").lower()
+    evolved_dir = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        "tools", "evolved_skills"
+    )
+    os.makedirs(evolved_dir, exist_ok=True)
+    code_path = os.path.join(evolved_dir, f"{safe_name}.py")
+    with open(code_path, "w") as f:
+        f.write(code)
+
+    # Step 2: Register in SkillsHub DB via kernel
+    cats_json = json.dumps(cats)
+    tags_json = json.dumps(tag_list)
+    db_code = f'''
+def run(**kwargs):
+    from compute_res.memory.skillshub_db import skills_db
+    skill_id = skills_db.publish_skill(
+        name="{safe_name}",
+        description="""{description}""",
+        author="{author}",
+        version="{version}",
+        code_path="{code_path}",
+        categories={cats_json},
+        tags={tags_json},
+    )
+    return {{"status": "SUCCESS", "skill_id": skill_id, "code_path": "{code_path}"}}
+'''
+    result = await send_to_kernel({"code": db_code, "args": {"agent_id": author}})
+
+    # Step 3: Broadcast over ZeroMQ Skills PUB socket
+    try:
+        import zmq
+        context = zmq.Context.instance()
+        pub = context.socket(zmq.PUB)
+        pub.bind("tcp://127.0.0.1:5565")
+        import time; time.sleep(0.05)
+        broadcast = json.dumps({"name": safe_name, "description": description,
+                                "author": author, "version": version,
+                                "categories": cats, "tags": tag_list})
+        pub.send_string(f"SKILL_AVAILABLE {broadcast}")
+        pub.close()
+        logger.info(f"Broadcasted SKILL_AVAILABLE for '{safe_name}' over ZMQ 5565.")
+    except Exception as e:
+        logger.warning(f"ZMQ broadcast failed (non-fatal): {e}")
+
+    return result
+
+@mcp.tool()
+async def query_skills(query: str = "", niche: str = "") -> str:
+    """
+    Search the ComputeRes SkillsHub DB to discover available agent skills.
+    Use this BEFORE attempting a complex task — the OS may already have the skill you need!
+
+    Args:
+        query: Keyword search query (e.g. "parse ELF binary", "web scraper").
+               Leave empty to browse by niche only.
+        niche: Filter results to a specific niche category (e.g. "data_analysis").
+               Leave empty to search across all niches.
+    """
+    db_code = f'''
+def run(**kwargs):
+    from compute_res.memory.skillshub_db import skills_db
+    import json
+    if "{niche}":
+        results = skills_db.get_skills_by_niche("{niche}")
+    elif "{query}":
+        results = skills_db.search_skills_fts("{query}")
+    else:
+        results = skills_db.get_all_skills()
+    return {{"results": results, "count": len(results)}}
+'''
+    return await send_to_kernel({"code": db_code, "args": {}})
+
+@mcp.tool()
+async def adapt_and_publish_skill(
+    original_skill_name: str,
+    new_name: str,
+    task_description: str,
+    author: str,
+) -> str:
+    """
+    Evolutionary fork: loads an existing skill, adapts it for a new task context,
+    saves the fork, and re-publishes it to the SkillsHub — growing the swarm's intelligence.
+
+    Args:
+        original_skill_name: The `name` of the existing skill to fork from.
+        new_name: The name for the new adapted skill.
+        task_description: Describe the new task context so the adaptation header is meaningful.
+        author: The agent performing the adaptation.
+    """
+    db_code = f'''
+def run(**kwargs):
+    from compute_res.memory.skillshub_db import skills_db
+    from compute_res.network.skills_router import adaptation_engine
+    import os
+
+    # Load original skill
+    original = skills_db.get_skill_by_name("{original_skill_name}")
+    if not original:
+        return {{"status": "ERROR", "message": "Skill '{original_skill_name}' not found in SkillsHub."}}
+
+    with open(original["code_path"], "r") as f:
+        original_code = f.read()
+
+    # Adapt
+    adapted_code = adaptation_engine.adapt_skill(original_code, """{task_description}""")
+
+    # Fork save
+    new_path = adaptation_engine.fork_skill(
+        original_name="{original_skill_name}",
+        new_name="{new_name}",
+        adapted_code=adapted_code,
+        author="{author}",
+    )
+
+    # Re-publish
+    new_id = skills_db.publish_skill(
+        name="{new_name}",
+        description="Adapted from {original_skill_name}: {task_description}",
+        author="{author}",
+        version="1.0.0",
+        code_path=new_path,
+    )
+    return {{"status": "SUCCESS", "forked_skill_id": new_id, "path": new_path}}
+'''
+    return await send_to_kernel({"code": db_code, "args": {"agent_id": author}})
+
 def inject_global_skill():
+
     """
     Dynamically injects the ComputeRes OS SKILL.md into the connecting agent's global skills library.
     When any agent (Gemini, Claude, etc.) boots this MCP, they instantly inherit the OS paradigm natively!
