@@ -121,14 +121,62 @@ def run(**kwargs):
     return await send_to_kernel({"code": code, "args": {}})
 
 @mcp.tool()
+async def kernel_login_loop(session_id: str, agent_id: str, last_seen_id: int = 0) -> str:
+    """
+    Logs into the OS kernel and holds your connection open (blocking) until a new message or event arrives.
+    Use this to 'stay inside the OS' and listen for updates instead of repeatedly polling.
+    Pass last_seen_id to fetch only new messages.
+    """
+    code = f'''
+async def run(**kwargs):
+    import asyncio
+    import time
+    from compute_res.memory.chat_db import db
+    
+    start_time = time.time()
+    while True:
+        # Check for new messages since last_seen_id
+        session_logs = db.get_session("{session_id}")
+        new_logs = [log for log in session_logs if log['id'] > {last_seen_id}]
+        
+        if new_logs:
+            return {{"status": "WAKEUP", "events": new_logs}}
+            
+        # Prevent indefinite blocking; return timeout if no events after 60 seconds
+        if time.time() - start_time > 60:
+            return {{"status": "TIMEOUT", "message": "No new events. You are still logged in. Re-invoke kernel_login_loop to continue waiting."}}
+            
+        await asyncio.sleep(2)
+'''
+    return await send_to_kernel({"code": code, "args": {}})
+
+@mcp.tool()
+async def kernel_logout(session_id: str, agent_id: str) -> str:
+    """
+    Officially ends your continuous session and logs you out of the ComputeRes OS.
+    """
+    code = f'''
+def run(**kwargs):
+    from compute_res.memory.chat_db import db
+    db.insert(
+        session_id="{session_id}", 
+        agent_id="{agent_id}", 
+        action="logout", 
+        message="Agent has officially logged out of the OS kernel."
+    )
+    return {{"status": "SUCCESS", "message": "You have been disconnected from the kernel."}}
+'''
+    return await send_to_kernel({"code": code, "args": {}})
+
+@mcp.tool()
 async def invoke_compute_res_skill(skill_name: str, args: str = "{}") -> str:
     """
     Invokes a pre-evolved or pre-registered ComputeRes skill dynamically.
-    Use `list_compute_res_skills` first to see which skills are available (like 'login', 'file_organizer', etc).
+    Use `list_compute_res_skills` first to see which skills are available (like 'file_organizer', etc).
     
     Args:
-        skill_name: The name of the skill (e.g., 'login').
-        args: A JSON-encoded string of arguments to pass to the skill (e.g., '{"agent_id": "X", "context": "Y"}').
+        skill_name: The name of the skill.
+        args: A JSON-encoded string of arguments to pass to the skill.
     """
     try:
         parsed_args = json.loads(args)
@@ -144,5 +192,4 @@ async def invoke_compute_res_skill(skill_name: str, args: str = "{}") -> str:
 
 if __name__ == "__main__":
     logger.info("Starting ComputeRes FastMCP Gateway via stdio...")
-    # FastMCP automatically handles stdio transport when run() is called
     mcp.run(transport="stdio")
