@@ -43,12 +43,12 @@ HyperbolicDBCard {
 #active_agents_grid_box {
     layout: grid;
     grid-size: 2;
-    grid-gutter: 1;
+    grid-gutter: 0 1;
     height: auto;
-    min-height: 9;
-    max-height: 18;
+    min-height: 7;
+    max-height: 14;
     margin: 0 1 1 1;
-    padding: 1;
+    padding: 0 1;
     border: round #38BDF8;
     background: #0D1117;
     overflow-y: auto;
@@ -65,9 +65,9 @@ HyperbolicDBCard {
 AgentCard {
     background: #161B22;
     border: round #30363D;
-    padding: 1 2;
-    height: 7;
-    min-height: 7;
+    padding: 0 1;
+    height: 5;
+    min-height: 5;
 }
 
 /* Bottom Log & Dialogue Section */
