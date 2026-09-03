@@ -12,9 +12,11 @@ agentos/core/__init__.py
 agentos/core/broker.py
 agentos/evolvos/__init__.py
 agentos/evolvos/msd.py
+agentos/filesystem/crdt_ast.py
 agentos/gateway/__init__.py
 agentos/gateway/mcp_server.py
 agentos/memory/__init__.py
+agentos/memory/hyperbolic_db.py
 agentos/memory/sao_schema.py
 agentos/memory/vector_mgr.py
 agentos/meta_compiler/__init__.py
@@ -25,9 +27,11 @@ agentos/network/signaling_server.py
 agentos/oracle/consensus.py
 agentos/orchestration/__init__.py
 agentos/orchestration/agent.py
+agentos/orchestration/federation.py
 agentos/orchestration/ipc_bus.py
 agentos/orchestration/kernel.py
 agentos/orchestration/mcp_bridge.py
+agentos/orchestration/mesh.py
 agentos/orchestration/registry.py
 agentos/orchestration/workflow.py
 agentos/p2p/__init__.py
@@ -35,6 +39,13 @@ agentos/p2p/delegator.py
 agentos/p2p/webrtc_node.py
 agentos/sandbox/__init__.py
 agentos/sandbox/wasm_engine.py
+agentos/security/wasm_sandbox.py
+agentos/telemetry/__init__.py
+agentos/telemetry/components/__init__.py
+agentos/telemetry/components/cards.py
+agentos/telemetry/core/__init__.py
+agentos/telemetry/core/app.py
+agentos/tools/__init__.py
 agentos/tools/agent/context_daemon.py
 agentos/tools/agent/rustc_wrapper.py
 agentos/tools/agents-playground/src/__init__.py
@@ -56,6 +67,8 @@ agentos/tools/agents-playground/src/network/mesh.py
 agentos/tools/agents-playground/src/security/auth.py
 agentos/tools/agents-playground/src/ui/dashboard.py
 agentos/tools/agents-playground/tests/test_core.py
+agentos/tools/evolved_skills/__init__.py
+agentos/tools/evolved_skills/file_organizer.py
 agentos/tools/evolved_skills/quantum_tensor.py
 agentos/tools/git-management-fleet/src/auto_reconcile.py
 agentos/tools/git-management-fleet/src/cascade_engine.py

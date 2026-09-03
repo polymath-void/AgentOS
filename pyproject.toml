@@ -6,6 +6,8 @@ build-backend = "setuptools.build_meta"
 name = "agentos"
 version = "1.0.0"
 description = "AgentOS High-Performance Swarm Ecosystem"
+readme = "README.md"
+authors = [{ name = "Polymath Void", email = "shuvops@gmail.com" }]
 requires-python = ">=3.10"
 dependencies = [
     "aiortc>=1.6.0",
