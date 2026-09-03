@@ -108,7 +108,7 @@ def run(**kwargs):
     )
     return {{"status": "SUCCESS", "message": "Message successfully pushed to ComputeRes OS."}}
 '''
-    return await send_to_kernel({"code": code, "args": {}})
+    return await send_to_kernel({"code": code, "args": {"agent_id": agent_id}})
 
 @mcp.tool()
 async def mailbox_read(session_id: str) -> str:
@@ -158,7 +158,7 @@ def run(**kwargs):
     )
     return {{"status": "SUCCESS", "message": "Webhook successfully registered with ComputeRes OS."}}
 '''
-    return await send_to_kernel({"code": code, "args": {}})
+    return await send_to_kernel({"code": code, "args": {"agent_id": agent_id}})
 
 @mcp.tool()
 async def invoke_compute_res_skill(skill_name: str, args: str = "{}") -> str:
