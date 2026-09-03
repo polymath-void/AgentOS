@@ -48,6 +48,8 @@ async def worker_backend():
                     exec(code, globals(), loc)
                     if "run" in loc:
                         result = loc["run"](**args)
+                        if asyncio.iscoroutine(result):
+                            result = await result
                         await socket.send_json({"status": "success", "data": result})
                     else:
                         await socket.send_json({"status": "error", "error": "Dynamic code must contain a run() function."})
@@ -62,6 +64,8 @@ async def worker_backend():
                     # Force reload in case the module was updated by another dynamic process
                     importlib.reload(skill_module)
                     result = skill_module.run(**args)
+                    if asyncio.iscoroutine(result):
+                        result = await result
                     await socket.send_json({"status": "success", "data": result})
                 except Exception as e:
                     logger.error(f"Failed to load/execute tool {tool_name}: {e}")

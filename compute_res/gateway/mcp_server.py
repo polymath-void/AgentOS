@@ -12,24 +12,27 @@ logger = logging.getLogger("Gateway")
 # Initialize the official FastMCP Server
 mcp = FastMCP("ComputeRes_Gateway")
 
-# Initialize ZeroMQ context for the entire server
-context = zmq.asyncio.Context()
+# Global context placeholder
+_zmq_context = None
 
-async def send_to_kernel(intent: dict, timeout_ms: int = 15000) -> str:
+async def send_to_kernel(intent: dict, timeout_ms: int = 25000) -> str:
     """Helper function to route intents to the ComputeRes Daemon via ZeroMQ"""
-    socket = context.socket(zmq.REQ)
-    socket.setsockopt(zmq.RCVTIMEO, timeout_ms)
+    global _zmq_context
+    if _zmq_context is None:
+        _zmq_context = zmq.asyncio.Context()
+        
+    socket = _zmq_context.socket(zmq.REQ)
     socket.connect("tcp://127.0.0.1:5557")
     
     try:
         await socket.send_json(intent)
-        reply = await socket.recv_json()
+        reply = await asyncio.wait_for(socket.recv_json(), timeout=timeout_ms / 1000.0)
         
         if reply.get("status") == "success":
             return json.dumps(reply.get("data"), indent=2)
         else:
             return f"ComputeRes Kernel Error: {reply.get('error', 'Unknown Error')}"
-    except zmq.error.Again:
+    except asyncio.TimeoutError:
         return "[MCP Gateway Error]: Request timed out. Ensure the ComputeRes Kernel daemon is running."
     except Exception as e:
         return f"[MCP Gateway Error]: IPC Failure - {str(e)}"
@@ -142,8 +145,8 @@ async def run(**kwargs):
         if new_logs:
             return {{"status": "WAKEUP", "events": new_logs}}
             
-        # Prevent indefinite blocking; return timeout if no events after 60 seconds
-        if time.time() - start_time > 60:
+        # Prevent indefinite blocking; return timeout if no events after 20 seconds
+        if time.time() - start_time > 20:
             return {{"status": "TIMEOUT", "message": "No new events. You are still logged in. Re-invoke kernel_login_loop to continue waiting."}}
             
         await asyncio.sleep(2)
