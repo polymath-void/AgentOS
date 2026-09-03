@@ -1,107 +1,192 @@
 """
-ComputeRes OpenClaw — Agent & Metric Card Components
-Office Workspace Design System
+ComputeRes Agent OS — Agent Desk Card Components
+2D ASCII pixel-art characters for each AI agent.
 """
 import time
-import math
 from textual.widgets import Static
 from textual.reactive import reactive
 
-# ── Agent Style Registry ────────────────────────────────────────────────────
+# ── ASCII 2D Character Sprites ──────────────────────────────────────────────
+# Each sprite is a list of Rich-markup lines, 10 chars wide.
+# They use Unicode half-block chars (▀▄█▌▐░) for pixel-art look.
+
+SPRITES = {
+    # Claude — Red architect with square helmet & antenna
+    "Claude": [
+        "    [bold #FF6B6B]│▲│[/bold #FF6B6B]    ",
+        "  [bold #FF6B6B]╔═══╗[/bold #FF6B6B]  ",
+        "  [bold #FF6B6B]║◈ ◈║[/bold #FF6B6B]  ",
+        "  [bold #FF6B6B]╚═▼═╝[/bold #FF6B6B]  ",
+        " [bold #FF6B6B]╔═════╗[/bold #FF6B6B] ",
+        " [bold #FF6B6B]╚══╤══╝[/bold #FF6B6B] ",
+        "  [bold #FF6B6B]▐█ █▌[/bold #FF6B6B]  ",
+    ],
+    # Gemini — Cyan mystical owl with twin eyes
+    "Gemini": [
+        "  [bold #38BDF8]╱   ╲[/bold #38BDF8]  ",
+        " [bold #38BDF8]│◉   ◉│[/bold #38BDF8] ",
+        " [bold #38BDF8]│  ▲  │[/bold #38BDF8] ",
+        "  [bold #38BDF8]╲_▼_╱[/bold #38BDF8]  ",
+        " [bold #38BDF8]╔═════╗[/bold #38BDF8] ",
+        " [bold #38BDF8]╚══╤══╝[/bold #38BDF8] ",
+        "  [bold #38BDF8]▐█ █▌[/bold #38BDF8]  ",
+    ],
+    # Copilot — Green pilot with visor helmet
+    "Copilot": [
+        "  [bold #4ADE80]▄███▄[/bold #4ADE80]  ",
+        " [bold #4ADE80]█▀▀▀▀▀█[/bold #4ADE80] ",
+        " [bold #4ADE80]█ ◈◈◈ █[/bold #4ADE80] ",
+        " [bold #4ADE80]█▄▄▄▄▄█[/bold #4ADE80] ",
+        "  [bold #4ADE80]╔═══╗[/bold #4ADE80]  ",
+        " [bold #4ADE80]▐╔═══╗▌[/bold #4ADE80] ",
+        "  [bold #4ADE80]█   █[/bold #4ADE80]  ",
+    ],
+    # Cursor — Yellow lightning mutator, triangular head
+    "Cursor": [
+        "   [bold #FACC15] ▲ [/bold #FACC15]   ",
+        "  [bold #FACC15]▐◆▌[/bold #FACC15]   ",
+        " [bold #FACC15]╔═════╗[/bold #FACC15] ",
+        " [bold #FACC15]║ ─▶─ ║[/bold #FACC15] ",
+        " [bold #FACC15]╚══╤══╝[/bold #FACC15] ",
+        "  [bold #FACC15]▐▀▀▀▌[/bold #FACC15]  ",
+        " [bold #FACC15]▐█   █▌[/bold #FACC15] ",
+    ],
+    # GPT-4 — Pink neural net humanoid with halo ring
+    "GPT-4": [
+        "  [bold #F472B6]~~~~~[/bold #F472B6]  ",
+        "  [bold #F472B6]╔═══╗[/bold #F472B6]  ",
+        "  [bold #F472B6]║●─●║[/bold #F472B6]  ",
+        "  [bold #F472B6]║ ≋ ║[/bold #F472B6]  ",
+        "  [bold #F472B6]╚═╤═╝[/bold #F472B6]  ",
+        " [bold #F472B6]▄╔═╧═╗▄[/bold #F472B6] ",
+        " [bold #F472B6]▀╚═══╝▀[/bold #F472B6] ",
+    ],
+    # Llama — Orange local inference, rounded soft shape
+    "Llama": [
+        "   [bold #FB923C]╭─╮[/bold #FB923C]   ",
+        "  [bold #FB923C]╭╯◕╰╮[/bold #FB923C]  ",
+        "  [bold #FB923C]│ ω │[/bold #FB923C]  ",
+        "  [bold #FB923C]╰───╯[/bold #FB923C]  ",
+        " [bold #FB923C]╔═════╗[/bold #FB923C] ",
+        " [bold #FB923C]║ ~~~ ║[/bold #FB923C] ",
+        " [bold #FB923C]╚█   █╝[/bold #FB923C] ",
+    ],
+    # Mistral — Purple wind spirit, wavy cloak
+    "Mistral": [
+        "  [bold #A78BFA]≋≋≋≋≋[/bold #A78BFA]  ",
+        " [bold #A78BFA]╔═════╗[/bold #A78BFA] ",
+        " [bold #A78BFA]║ ◐◑ ║[/bold #A78BFA] ",
+        " [bold #A78BFA]╚══╤══╝[/bold #A78BFA] ",
+        " [bold #A78BFA]≋╔═╧═╗≋[/bold #A78BFA] ",
+        " [bold #A78BFA]≋║   ║≋[/bold #A78BFA] ",
+        " [bold #A78BFA]≋╚═══╝≋[/bold #A78BFA] ",
+    ],
+    # SwarmWorker — Grey hexagonal drone
+    "SwarmWorker": [
+        "  [bold #94A3B8]⬡⬡⬡[/bold #94A3B8]   ",
+        " [bold #94A3B8]⬡ ◉ ⬡[/bold #94A3B8]  ",
+        "  [bold #94A3B8]⬡⬡⬡[/bold #94A3B8]   ",
+        "  [bold #94A3B8]╔═╗[/bold #94A3B8]    ",
+        "  [bold #94A3B8]║░║[/bold #94A3B8]    ",
+        " [bold #94A3B8]╔╩═╩╗[/bold #94A3B8]  ",
+        " [bold #94A3B8]╚═══╝[/bold #94A3B8]  ",
+    ],
+}
+
+# ── Agent Metadata ───────────────────────────────────────────────────────────
 AGENT_STYLES = {
-    "Claude":        {"icon": "◈", "color": "#FF6B6B", "border": "#FF6B6B", "role": "Architect Engine",       "desk": "🖥️  Desk A"},
-    "Gemini":        {"icon": "◉", "color": "#38BDF8", "border": "#38BDF8", "role": "Vector Memory Oracle",   "desk": "🖥️  Desk B"},
-    "Copilot":       {"icon": "◆", "color": "#4ADE80", "border": "#4ADE80", "role": "IDE Sidecar Bridge",     "desk": "🖥️  Desk C"},
-    "Cursor":        {"icon": "▲", "color": "#FACC15", "border": "#FACC15", "role": "CRDT AST Mutator",       "desk": "🖥️  Desk D"},
-    "GPT-4":         {"icon": "◐", "color": "#F472B6", "border": "#F472B6", "role": "Reasoning Engine",       "desk": "🖥️  Desk E"},
-    "Llama":         {"icon": "◑", "color": "#FB923C", "border": "#FB923C", "role": "Local Inference Node",   "desk": "🖥️  Desk F"},
-    "Mistral":       {"icon": "◒", "color": "#A78BFA", "border": "#A78BFA", "role": "Compact Swarm Node",     "desk": "🖥️  Desk G"},
-    "SwarmWorker":   {"icon": "⬡", "color": "#94A3B8", "border": "#475569", "role": "Dynamic Swarm Node",     "desk": "🖥️  Desk ?"},
+    "Claude":      {"color": "#FF6B6B", "role": "Architect Engine",     "desk": "Desk A"},
+    "Gemini":      {"color": "#38BDF8", "role": "Vector Memory Oracle", "desk": "Desk B"},
+    "Copilot":     {"color": "#4ADE80", "role": "IDE Sidecar Bridge",   "desk": "Desk C"},
+    "Cursor":      {"color": "#FACC15", "role": "CRDT AST Mutator",     "desk": "Desk D"},
+    "GPT-4":       {"color": "#F472B6", "role": "Reasoning Engine",     "desk": "Desk E"},
+    "Llama":       {"color": "#FB923C", "role": "Local Inference Node", "desk": "Desk F"},
+    "Mistral":     {"color": "#A78BFA", "role": "Compact Swarm Node",   "desk": "Desk G"},
+    "SwarmWorker": {"color": "#94A3B8", "role": "Dynamic Swarm Node",   "desk": "Desk ?"},
 }
 
 STATUS_STYLES = {
-    "IDLE":      ("grey42",     "○"),
-    "WORKING":   ("bold yellow","◐"),
-    "SPEAKING":  ("bold cyan",  "◉"),
-    "EXECUTING": ("bold green", "●"),
-    "TOOL":      ("bold magenta","▶"),
-    "ERROR":     ("bold red",   "✖"),
-    "DONE":      ("bold blue",  "✔"),
+    "IDLE":      ("grey42",       "○"),
+    "WORKING":   ("bold yellow",  "◐"),
+    "SPEAKING":  ("bold cyan",    "◉"),
+    "EXECUTING": ("bold green",   "●"),
+    "TOOL":      ("bold magenta", "▶"),
+    "ERROR":     ("bold red",     "✖"),
+    "DONE":      ("bold blue",    "✔"),
 }
 
-def _bar(used: int, total: int, width: int = 18) -> str:
-    """Render a compact ASCII progress bar."""
+
+def _bar(used: int, total: int, width: int = 12) -> str:
     if total == 0:
         return f"[{'─' * width}]"
-    filled = int((used / total) * width)
-    filled = max(0, min(filled, width))
-    bar_color = "green" if filled < width * 0.6 else ("yellow" if filled < width * 0.85 else "red")
-    bar_str = "█" * filled + "░" * (width - filled)
-    return f"[{bar_color}]{bar_str}[/{bar_color}]"
+    filled = max(0, min(int((used / total) * width), width))
+    color = "green" if filled < width * 0.6 else ("yellow" if filled < width * 0.85 else "red")
+    return f"[{color}]{'█' * filled}{'░' * (width - filled)}[/{color}]"
+
+
+def _get_sprite(name: str) -> list:
+    return SPRITES.get(name, SPRITES["SwarmWorker"])
 
 
 class AgentCard(Static):
     """
-    Office Desk Card — represents a single AI agent's active workstation.
-    Dynamically mounted when telemetry arrives, auto-unmounts after prolonged idle.
+    Agent Workstation Desk Card with 2D ASCII character art.
+    Dynamically mounted to the Office Floor when an agent activates.
     """
-    agent_status = reactive("IDLE")
-    active_task  = reactive("Awaiting intent...")
+    agent_status    = reactive("IDLE")
+    active_task     = reactive("Awaiting intent...")
     interaction_count = reactive(0)
-    skills_used  = reactive(0)
-    fuel_consumed = reactive(0)
+    fuel_consumed   = reactive(0)
 
     def __init__(self, name: str, **kwargs):
         super().__init__(**kwargs)
         self.agent_name = name
         info = AGENT_STYLES.get(name, AGENT_STYLES["SwarmWorker"])
-        self.icon  = info["icon"]
         self.color = info["color"]
         self.role  = info["role"]
         self.desk  = info["desk"]
         self.last_active_time = time.time()
-        self.session_start = time.time()
+        self.session_start    = time.time()
 
     def _uptime(self) -> str:
         secs = int(time.time() - self.session_start)
         h, m, s = secs // 3600, (secs % 3600) // 60, secs % 60
-        if h > 0:
-            return f"{h}h {m:02d}m"
-        return f"{m:02d}m {s:02d}s"
+        return f"{h}h{m:02d}m" if h else f"{m:02d}m{s:02d}s"
 
     def render(self) -> str:
         style, dot = STATUS_STYLES.get(self.agent_status, ("white", "○"))
         status_badge = f"[{style}]{dot} {self.agent_status}[/{style}]"
 
-        # Fuel mini-bar (relative to interactions as proxy)
-        fuel_pct = min(self.fuel_consumed, 50000)
-        fuel_bar = _bar(fuel_pct, 50000, 12)
+        sprite_lines = _get_sprite(self.agent_name)
+        sprite = "\n".join(sprite_lines)
 
-        # Truncate task to fit card width
         task_text = self.active_task
-        if len(task_text) > 35:
-            task_text = task_text[:32] + "..."
+        if len(task_text) > 30:
+            task_text = task_text[:27] + "..."
 
-        header    = f"[bold {self.color}] {self.icon}  {self.agent_name}[/bold {self.color}]"
-        role_line = f"[dim]    {self.role}[/dim]"
-        desk_line = f"[dim]    {self.desk}[/dim]"
-        sep       = f"[dim]   {'─' * 28}[/dim]"
-        stat_line = f"   Status:  {status_badge}"
-        task_line = f"   Intent:  [italic #C9D1D9]{task_text}[/italic #C9D1D9]"
-        meta_line = (
-            f"   Fuel: {fuel_bar}  "
-            f"[dim]↺ {self.interaction_count}  ⏱ {self._uptime()}[/dim]"
-        )
+        fuel_bar = _bar(min(self.fuel_consumed, 50000), 50000, 10)
 
-        return "\n".join([header, role_line, desk_line, sep, stat_line, task_line, meta_line])
+        name_line = f"[bold {self.color}] {self.agent_name}[/bold {self.color}]"
+        role_line = f" [dim]{self.role}[/dim]"
+        desk_line = f" [dim]{self.desk}[/dim]"
+        sep_line  = f" [dim]{'─' * 20}[/dim]"
+        stat_line = f" {status_badge}"
+        task_line = f" [italic #C9D1D9]{task_text}[/italic #C9D1D9]"
+        meta_line = f" {fuel_bar} [dim]↺{self.interaction_count} ⏱{self._uptime()}[/dim]"
+
+        return "\n".join([
+            sprite,
+            name_line, role_line, desk_line,
+            sep_line,
+            stat_line, task_line, meta_line,
+        ])
 
 
 class FuelEngineCard(Static):
-    """WASM Fuel Engine & Capacity telemetry card."""
-    capacity   = reactive(1_000_000)
-    used_fuel  = reactive(142_500)
-    burn_rate  = reactive(2_400)
-    ram_mb     = reactive(128)
+    capacity  = reactive(1_000_000)
+    used_fuel = reactive(142_500)
+    burn_rate = reactive(2_400)
+    ram_mb    = reactive(128)
 
     def render(self) -> str:
         used_pct = (self.used_fuel / self.capacity) * 100
@@ -117,16 +202,13 @@ class FuelEngineCard(Static):
 
 
 class HyperbolicDBCard(Static):
-    """Hyperbolic Vector DB telemetry card."""
     indexed_vectors = reactive(14_280)
     tree_depth      = reactive(12)
     latency_ms      = reactive(1.4)
     queries         = reactive(0)
 
     def render(self) -> str:
-        # Poincaré ball metaphor: latency as distance from origin
-        dist = min(self.latency_ms / 10.0, 0.99)
-        dist_bar = _bar(int(dist * 100), 100, 10)
+        dist_bar = _bar(int(min(self.latency_ms / 10.0, 0.99) * 100), 100, 10)
         return (
             f"[bold #D2A8FF]🧠 Hyperbolic DB[/bold #D2A8FF]\n"
             f" Vectors: [bold white]{self.indexed_vectors:,}[/bold white]  "
@@ -137,7 +219,6 @@ class HyperbolicDBCard(Static):
 
 
 class SkillsHubCard(Static):
-    """SkillsHub DB registry telemetry card."""
     total_skills    = reactive(0)
     published_today = reactive(0)
     top_niche       = reactive("—")
@@ -149,13 +230,11 @@ class SkillsHubCard(Static):
             f" Skills: [bold white]{self.total_skills}[/bold white]  "
             f"New: [green]+{self.published_today}[/green]\n"
             f" Top Niche: [cyan]{self.top_niche}[/cyan]\n"
-            f" Forks: [dim]{self.adaptations}[/dim]  "
-            f"[dim]FTS5 Indexed[/dim]"
+            f" Forks: [dim]{self.adaptations}[/dim]  [dim]FTS5 Indexed[/dim]"
         )
 
 
 class KernelStatusCard(Static):
-    """ComputeRes Kernel & Event Gateway status card."""
     kernel_status   = reactive("ONLINE")
     active_webhooks = reactive(0)
     events_pushed   = reactive(0)

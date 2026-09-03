@@ -35,8 +35,8 @@ from compute_res.telemetry.components.cards import (
 class OpenClawOffice(App):
     """ComputeRes OpenClaw — Agent Office Workspace Dashboard."""
 
-    TITLE    = "ComputeRes OpenClaw"
-    SUB_TITLE = "Agent Office Workspace  ·  Real-Time Swarm Monitor"
+    TITLE    = "ComputeRes Agent OS"
+    SUB_TITLE = "Agent Office  ·  Real-Time Swarm Monitor"
     CSS_PATH  = "../styles/tui.css"
 
     BINDINGS = [
@@ -56,7 +56,7 @@ class OpenClawOffice(App):
         # Global header
         with Horizontal(id="header_bar"):
             yield Static(
-                "◈ [bold #38BDF8]ComputeRes[/bold #38BDF8] [dim]OpenClaw[/dim]",
+                "◈ [bold #38BDF8]ComputeRes[/bold #38BDF8] [dim]Agent OS[/dim]",
                 id="header_logo",
             )
             yield Static("", id="header_status_bar")
@@ -185,7 +185,7 @@ class OpenClawOffice(App):
     # ── Mount & Init ──────────────────────────────────────────────
     async def on_mount(self) -> None:
         # Boot messages
-        self._boot_log("[bold #38BDF8]ComputeRes OpenClaw Office Workspace[/bold #38BDF8] booting...")
+        self._boot_log("[bold #38BDF8]ComputeRes Agent OS[/bold #38BDF8] booting...")
         self._boot_log("ZeroMQ Telemetry Subscriber → [dim]tcp://127.0.0.1:5562[/dim]")
         self._boot_log("SkillsHub DB → FTS5 search engine active.")
         self._boot_log("Event Gateway → Webhook push system online.")

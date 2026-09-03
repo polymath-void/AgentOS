@@ -95,11 +95,11 @@ KernelStatusCard {
 
 #active_agents_grid_box {
     layout: grid;
-    grid-size: 3;
+    grid-size: 2;
     grid-gutter: 1 1;
     height: auto;
-    min-height: 12;
-    max-height: 22;
+    min-height: 18;
+    max-height: 38;
     margin: 0 1 1 1;
     padding: 1;
     border: round #1F6FEB;
@@ -108,19 +108,19 @@ KernelStatusCard {
 }
 
 #empty_placeholder {
-    column-span: 3;
+    column-span: 2;
     content-align: center middle;
     color: #30363D;
     text-style: italic;
-    height: 8;
+    height: 14;
 }
 
 AgentCard {
     background: #0D1117;
     border: round #30363D;
     padding: 1 2;
-    height: 10;
-    min-height: 10;
+    height: 18;
+    min-height: 18;
 }
 
 AgentCard:hover {
