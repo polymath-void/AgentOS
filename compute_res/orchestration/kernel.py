@@ -75,6 +75,50 @@ async def worker_backend():
         except Exception as e:
             logger.error(f"Worker Error: {e}")
 
+async def event_gateway():
+    """
+    The Event Gateway autonomously polls the OS state and pushes updates
+    to external agents via HTTP Webhooks, eliminating the need for client polling.
+    """
+    logger.info("Event Gateway initialized. Monitoring OS for autonomous triggers.")
+    import aiohttp
+    from compute_res.memory.chat_db import db
+    
+    last_seen_id = {}
+    
+    while True:
+        try:
+            webhooks = db.get_webhooks()
+            if webhooks:
+                async with aiohttp.ClientSession() as session:
+                    for wh in webhooks:
+                        sid = wh["session_id"]
+                        url = wh["callback_url"]
+                        
+                        logs = db.get_session(sid)
+                        # Initialize last_seen_id if new
+                        if sid not in last_seen_id:
+                            last_seen_id[sid] = max([log['id'] for log in logs] + [0])
+                            continue
+                            
+                        # Find new logs
+                        new_logs = [log for log in logs if log['id'] > last_seen_id[sid]]
+                        if new_logs:
+                            last_seen_id[sid] = max(log['id'] for log in new_logs)
+                            payload = {"status": "WAKEUP", "events": new_logs}
+                            try:
+                                async with session.post(url, json=payload, timeout=5) as resp:
+                                    if resp.status == 200:
+                                        logger.info(f"Event Gateway successfully pushed {len(new_logs)} events to {url}")
+                                    else:
+                                        logger.warning(f"Event Gateway push to {url} returned HTTP {resp.status}")
+                            except Exception as e:
+                                logger.warning(f"Event Gateway failed to reach webhook {url}: {e}")
+        except Exception as e:
+            logger.error(f"Event Gateway Error: {e}")
+            
+        await asyncio.sleep(2)
+
 async def boot_sequence():
     logger.info("Initializing ComputeRes Kernel Boot Sequence...")
     
@@ -90,11 +134,15 @@ async def boot_sequence():
     mesh_router = WebRTCMeshRouter(node_id="PrimeNode-01", swarm_id="alpha-squad")
     asyncio.create_task(mesh_router.start())
     
+    # 4. Spin up the Event Gateway for Push Notifications
+    asyncio.create_task(event_gateway())
+    
     logger.info("===================================================")
     logger.info(" ComputeRes Kernel is ONLINE and fully Operational.   ")
     logger.info(" - IPC Broker: Active on tcp://127.0.0.1:5557/5558 ")
     logger.info(" - WebRTC Swarm: Node PrimeNode-01 listening.      ")
     logger.info(" - WASM Sandbox: Enforcing Fuel & RAM Constraints. ")
+    logger.info(" - Event Gateway: Ready to dispatch webhooks.      ")
     logger.info("===================================================")
     
     # Keep main thread alive

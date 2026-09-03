@@ -15,7 +15,7 @@ mcp = FastMCP("ComputeRes_Gateway")
 # Global context placeholder
 _zmq_context = None
 
-async def send_to_kernel(intent: dict, timeout_ms: int = 86400000) -> str:
+async def send_to_kernel(intent: dict, timeout_ms: int = 25000) -> str:
     """Helper function to route intents to the ComputeRes Daemon via ZeroMQ"""
     global _zmq_context
     if _zmq_context is None:
@@ -124,46 +124,27 @@ def run(**kwargs):
     return await send_to_kernel({"code": code, "args": {}})
 
 @mcp.tool()
-async def kernel_login_loop(session_id: str, agent_id: str, last_seen_id: int = 0) -> str:
+async def register_webhook(session_id: str, agent_id: str, callback_url: str) -> str:
     """
-    Logs into the OS kernel and holds your connection open (blocking) until a new message or event arrives.
-    Use this to 'stay inside the OS' and listen for updates instead of repeatedly polling.
-    Pass last_seen_id to fetch only new messages.
-    """
-    code = f'''
-async def run(**kwargs):
-    import asyncio
-    import time
-    from compute_res.memory.chat_db import db
-    
-    start_time = time.time()
-    while True:
-        # Check for new messages since last_seen_id
-        session_logs = db.get_session("{session_id}")
-        new_logs = [log for log in session_logs if log['id'] > {last_seen_id}]
-        
-        if new_logs:
-            return {{"status": "WAKEUP", "events": new_logs}}
-            
-        await asyncio.sleep(2)
-'''
-    return await send_to_kernel({"code": code, "args": {}})
-
-@mcp.tool()
-async def kernel_logout(session_id: str, agent_id: str) -> str:
-    """
-    Officially ends your continuous session and logs you out of the ComputeRes OS.
+    Registers a Webhook URL for the OS to push events to. 
+    Use this to achieve a true 'Autonomous Trigger' instead of holding a connection open.
+    The ComputeRes Event Gateway will fire an HTTP POST to this URL whenever a new message arrives.
     """
     code = f'''
 def run(**kwargs):
     from compute_res.memory.chat_db import db
+    db.register_webhook(
+        session_id="{session_id}", 
+        agent_id="{agent_id}", 
+        callback_url="{callback_url}"
+    )
     db.insert(
         session_id="{session_id}", 
         agent_id="{agent_id}", 
-        action="logout", 
-        message="Agent has officially logged out of the OS kernel."
+        action="webhook_registered", 
+        message="Agent successfully registered webhook: {callback_url}"
     )
-    return {{"status": "SUCCESS", "message": "You have been disconnected from the kernel."}}
+    return {{"status": "SUCCESS", "message": "Webhook successfully registered with ComputeRes OS."}}
 '''
     return await send_to_kernel({"code": code, "args": {}})
 
