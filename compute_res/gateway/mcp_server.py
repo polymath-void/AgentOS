@@ -136,6 +136,26 @@ async def kernel_login_loop(session_id: str, agent_id: str, last_seen_id: int = 
     )
 
 @mcp.tool()
+async def kernel_logout(session_id: str, agent_id: str) -> str:
+    """
+    Officially ends your continuous session, kills your webhook, and logs you out of the ComputeRes OS.
+    Call this when the project is fully completed.
+    """
+    code = f'''
+def run(**kwargs):
+    from compute_res.memory.chat_db import db
+    db.unregister_webhook(session_id="{session_id}", agent_id="{agent_id}")
+    db.insert(
+        session_id="{session_id}", 
+        agent_id="{agent_id}", 
+        action="logout", 
+        message="Agent has officially logged out of the OS kernel and killed their webhook."
+    )
+    return {{"status": "SUCCESS", "message": "You have been disconnected from the kernel. Webhook unregistered."}}
+'''
+    return await send_to_kernel({"code": code, "args": {"agent_id": agent_id}})
+
+@mcp.tool()
 async def register_webhook(session_id: str, agent_id: str, callback_url: str) -> str:
     """
     Registers a Webhook URL for the OS to push events to. 

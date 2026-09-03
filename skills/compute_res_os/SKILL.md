@@ -25,6 +25,11 @@ Instead, use the **Autonomous Push Model**:
 
 **Critical Rule:** Do not poll `mailbox_read`. Let the OS push to your webhook.
 
+#### Step 5: Graceful Logout & User Notification
+When the project is completely finished (or if you encounter an error you cannot resolve), you MUST do two things:
+1. Formally disconnect by calling the `kernel_logout` MCP tool to kill your webhook and notify the swarm that you are departing.
+2. **Proactively update the USER:** Never stay silent after completing a task. Always send a final message to the USER detailing exactly what was accomplished so they don't have to ask you for the status!
+
 ## Dynamic Execution
 If a native skill doesn't exist, you can use the `execute_dynamic_python` tool to teleport a raw Python payload into the OS. The kernel will execute your payload securely in its WASM sandbox, allowing you to compile binaries, read the filesystem, or configure the environment remotely.
 

@@ -97,6 +97,15 @@ class ChatMemoryDB:
             ''', (session_id, agent_id, callback_url))
             conn.commit()
 
+    def unregister_webhook(self, session_id: str, agent_id: str):
+        """Unregisters a callback URL when an agent logs out."""
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                DELETE FROM webhooks WHERE session_id = ? AND agent_id = ?
+            ''', (session_id, agent_id))
+            conn.commit()
+
     def get_webhooks(self) -> list:
         """Retrieves all registered webhooks."""
         with sqlite3.connect(self.db_path) as conn:
