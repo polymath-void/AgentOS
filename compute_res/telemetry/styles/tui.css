@@ -44,7 +44,9 @@ HyperbolicDBCard {
     layout: grid;
     grid-size: 2;
     grid-gutter: 1;
-    height: 1fr;
+    height: auto;
+    min-height: 9;
+    max-height: 18;
     margin: 0 1 1 1;
     padding: 1;
     border: round #38BDF8;
@@ -65,6 +67,7 @@ AgentCard {
     border: round #30363D;
     padding: 1 2;
     height: 7;
+    min-height: 7;
 }
 
 /* Bottom Log & Dialogue Section */
