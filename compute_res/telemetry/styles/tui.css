@@ -1,132 +1,242 @@
+/* ═══════════════════════════════════════════════════════════════
+   ComputeRes OpenClaw — Office Workspace TUI
+   Design System: Deep Space Cyberpunk + Office Floor Aesthetic
+   ═══════════════════════════════════════════════════════════════ */
+
 Screen {
-    background: #0B0E14;
+    background: #080B10;
     color: #C9D1D9;
+    layers: base overlay;
 }
 
-#header_title {
+/* ── Global Header Bar ─────────────────────────────────────────── */
+#header_bar {
     height: 3;
+    layout: horizontal;
+    background: #0D1117;
+    border-bottom: heavy #1F6FEB;
+    padding: 0 2;
     content-align: center middle;
-    background: #161B22;
+}
+
+#header_logo {
+    width: 1fr;
+    content-align: left middle;
     color: #38BDF8;
-    border-bottom: solid #30363D;
     text-style: bold;
 }
 
-/* Top Telemetry Cards */
-.telemetry_header_bar {
-    height: 7;
+#header_status_bar {
+    width: 2fr;
+    content-align: center middle;
+    color: #4ADE80;
+}
+
+#header_clock {
+    width: 1fr;
+    content-align: right middle;
+    color: #8B949E;
+}
+
+/* ── TabbedContent ─────────────────────────────────────────────── */
+TabbedContent {
+    height: 1fr;
+}
+
+TabbedContent > TabPane {
+    padding: 0;
+}
+
+/* ── Tab 1: Virtual Office ─────────────────────────────────────── */
+
+/* Top Metrics Strip */
+.metrics_strip {
+    height: 8;
+    layout: horizontal;
     margin: 1 1 0 1;
+    gap: 1;
 }
 
 FuelEngineCard {
-    width: 50%;
-    background: #161B22;
-    border: round #58A6FF;
+    width: 1fr;
+    background: #0D1117;
+    border: round #1F6FEB;
     padding: 1 2;
-    margin-right: 1;
 }
 
 HyperbolicDBCard {
-    width: 50%;
-    background: #161B22;
-    border: round #D2A8FF;
+    width: 1fr;
+    background: #0D1117;
+    border: round #7C3AED;
     padding: 1 2;
 }
 
-/* Dynamic Virtual Office Grid Box */
-.agents_section_title {
+SkillsHubCard {
+    width: 1fr;
+    background: #0D1117;
+    border: round #059669;
+    padding: 1 2;
+}
+
+KernelStatusCard {
+    width: 1fr;
+    background: #0D1117;
+    border: round #D97706;
+    padding: 1 2;
+}
+
+/* ── Office Floor Section ──────────────────────────────────────── */
+#office_floor_label {
     margin: 1 1 0 1;
-    text-style: bold;
+    height: 1;
     color: #38BDF8;
+    text-style: bold;
 }
 
 #active_agents_grid_box {
     layout: grid;
-    grid-size: 2;
-    grid-gutter: 0 1;
+    grid-size: 3;
+    grid-gutter: 1 1;
     height: auto;
-    min-height: 7;
-    max-height: 14;
+    min-height: 12;
+    max-height: 22;
     margin: 0 1 1 1;
-    padding: 0 1;
-    border: round #38BDF8;
-    background: #0D1117;
+    padding: 1;
+    border: round #1F6FEB;
+    background: #080B10;
     overflow-y: auto;
 }
 
 #empty_placeholder {
-    column-span: 2;
-    row-span: 2;
+    column-span: 3;
     content-align: center middle;
-    color: #8B949E;
+    color: #30363D;
     text-style: italic;
+    height: 8;
 }
 
 AgentCard {
-    background: #161B22;
+    background: #0D1117;
     border: round #30363D;
-    padding: 0 1;
-    height: 5;
-    min-height: 5;
+    padding: 1 2;
+    height: 10;
+    min-height: 10;
 }
 
-/* Bottom Log & Dialogue Section */
-.bottom_section {
+AgentCard:hover {
+    border: round #38BDF8;
+    background: #111823;
+}
+
+AgentCard.status-executing {
+    border: round #4ADE80;
+}
+
+AgentCard.status-speaking {
+    border: round #38BDF8;
+}
+
+AgentCard.status-tool {
+    border: round #F472B6;
+}
+
+AgentCard.status-idle {
+    border: round #30363D;
+    opacity: 0.7;
+}
+
+/* ── Bottom Log Row ────────────────────────────────────────────── */
+.log_row {
     height: 1fr;
+    layout: horizontal;
     margin: 0 1 1 1;
+    gap: 1;
 }
 
-.telemetry_log_box {
-    width: 35%;
-    border-right: solid #30363D;
-    padding-right: 1;
-}
-
-.dialogue_log_box {
-    width: 65%;
-    padding-left: 1;
-}
-
-#telemetry_stream_log, #dialogue_log, #event_log {
-    height: 1fr;
+.intent_stream_box {
+    width: 30%;
     border: round #30363D;
-    background: #090D12;
+    background: #080B10;
+    padding: 0 1;
 }
 
-/* Tab 2: Skill Workbench */
+.dialogue_feed_box {
+    width: 45%;
+    border: round #30363D;
+    background: #080B10;
+    padding: 0 1;
+}
+
+.skills_activity_box {
+    width: 25%;
+    border: round #059669;
+    background: #080B10;
+    padding: 0 1;
+}
+
+.log_label {
+    height: 1;
+    text-style: bold;
+    padding: 0 1;
+    background: #0D1117;
+}
+
+#intent_log, #dialogue_log, #skills_log {
+    height: 1fr;
+    background: #080B10;
+}
+
+/* ── Tab 2: Skill Workbench ────────────────────────────────────── */
 .workbench_container {
     height: 1fr;
-    padding: 1;
     layout: horizontal;
+    padding: 1;
+    gap: 1;
 }
 
 .editor_column {
     width: 45%;
     height: 1fr;
-    margin-right: 1;
+    layout: vertical;
+    gap: 1;
 }
 
-.tools_column {
+.catalog_column {
     width: 55%;
     height: 1fr;
+    layout: vertical;
+    gap: 1;
 }
 
 #editor_pane {
     height: 1fr;
     border: round #38BDF8;
+    background: #080B10;
 }
 
-#tools_table {
+#skills_catalog_table {
     height: 1fr;
-    width: 1fr;
     border: round #4ADE80;
-    background: #161B22;
-    margin-bottom: 1;
+    background: #0D1117;
 }
 
 #mermaid_pane {
+    height: 10;
+    border: round #7C3AED;
+    background: #080B10;
+}
+
+/* ── Tab 3: System Console ─────────────────────────────────────── */
+#system_console_log {
     height: 1fr;
-    width: 1fr;
-    border: round #C084FC;
-    background: #090D12;
+    margin: 1;
+    border: round #30363D;
+    background: #050709;
+}
+
+/* ── Footer ────────────────────────────────────────────────────── */
+Footer {
+    background: #0D1117;
+    color: #8B949E;
+    border-top: solid #30363D;
 }
