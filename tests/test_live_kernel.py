@@ -3,24 +3,16 @@ import sys
 import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from src.client.mcp_client import ComputeResClient
+from compute_res.sdk.client import ComputeResClient
 
 async def test_live_connection():
     print("\n--- INITIATING LIVE KERNEL TEST ---")
     
-    # Instantiate the Standalone Client (Simulating an external LLM)
     client = ComputeResClient()
-    
     print("[LLM Client] Connecting to ComputeRes Gateway via ZeroMQ...")
     
-    # We will simulate the LLM issuing an intent to execute a tool.
-    tool_intent = "system_diagnostic"
-    args = {"verbose": True}
-    
-    print(f"[LLM Client] Executing Intent: {tool_intent} | Args: {args}")
-    
-    # Send the request to the running kernel
-    response = await client.execute_tool(tool_name=tool_intent, arguments=args)
+    code = "def run(**kwargs): return {'status': 'ONLINE', 'os': 'ComputeRes 1.0.0'}"
+    response = await client.execute_dynamic_code(code)
     
     print("\n[LLM Client] Received Response from OS:")
     print(response)

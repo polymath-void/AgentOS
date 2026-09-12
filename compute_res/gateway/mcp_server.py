@@ -62,6 +62,80 @@ async def execute_dynamic_python(code: str, args: str = "{}") -> str:
     return await send_to_kernel(intent)
 
 @mcp.tool()
+async def execute_wasm(wasm_path: str, entrypoint: str = "run", args: str = "{}", fuel: int = 10000000) -> str:
+    """
+    Executes a compiled WebAssembly (WASM) binary inside the ComputeRes fuel-metered micro-sandbox.
+    
+    Args:
+        wasm_path: Path to the .wasm binary file.
+        entrypoint: Exported WASM function to invoke (default: 'run').
+        args: JSON string of arguments.
+        fuel: Maximum CPU fuel allocated to the WASM execution.
+    """
+    try:
+        parsed_args = json.loads(args)
+    except json.JSONDecodeError:
+        return "Error: 'args' must be a valid JSON string."
+
+    code = f'''
+def run(**kwargs):
+    from compute_res.core.sandbox import WASMSandboxRunner
+    import os
+
+    path = "{wasm_path}"
+    if not os.path.exists(path):
+        return {{"status": "error", "error": f"WASM file not found at {{path}}"}}
+
+    with open(path, "rb") as f:
+        wasm_bytes = f.read()
+
+    runner = WASMSandboxRunner()
+    return runner.execute_wasm_bytes(
+        wasm_bytes=wasm_bytes,
+        entrypoint="{entrypoint}",
+        args={parsed_args},
+        fuel={fuel}
+    )
+'''
+    return await send_to_kernel({"code": code, "args": {}})
+
+@mcp.tool()
+async def load_module_manifest(manifest_path: str) -> str:
+    """
+    Loads and validates a ComputeRes WASM/Skill module manifest (compute-res.json).
+    
+    Args:
+        manifest_path: Path to the compute-res.json file.
+    """
+    code = f'''
+def run(**kwargs):
+    from compute_res.core.manifest import load_manifest
+    try:
+        manifest = load_manifest("{manifest_path}")
+        return {{"status": "success", "manifest": manifest.to_dict()}}
+    except Exception as e:
+        return {{"status": "error", "error": str(e)}}
+'''
+    return await send_to_kernel({"code": code, "args": {}})
+
+@mcp.tool()
+async def search_chat_history(query: str) -> str:
+    """
+    Performs a high-speed SQLite FTS5 full-text search across all historical agent messages, 
+    chat logs, and inter-agent mailbox interactions in the ComputeRes memory database.
+    
+    Args:
+        query: Full-text search query string (e.g. "deployment error", "wasm fuel").
+    """
+    code = f'''
+def run(**kwargs):
+    from compute_res.memory.chat_db import db
+    results = db.search("""{query}""")
+    return {{"query": """{query}""", "count": len(results), "results": results}}
+'''
+    return await send_to_kernel({"code": code, "args": {}})
+
+@mcp.tool()
 async def list_compute_res_skills() -> str:
     """
     Lists all dynamically registered and evolved skills available inside the ComputeRes OS.

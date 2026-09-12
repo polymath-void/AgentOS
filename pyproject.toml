@@ -20,6 +20,7 @@ dependencies = [
 
 [project.scripts]
 compute_res = "compute_res.orchestration.kernel:main"
+compute-res = "compute_res.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["."]

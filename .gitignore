@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# Databases & Logs
+*.db
+*.sqlite
+*.log
+interactions.db
+agy_nodeos.db
+debug_daemon.log
+daemon.log
+
+# Temporary/Local Agent folders
+.jsagent/
+shared_context/
+*.whl

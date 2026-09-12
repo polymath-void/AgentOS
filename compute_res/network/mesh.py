@@ -1,9 +1,10 @@
 import asyncio
 import json
 import logging
-import zmq
-import zmq.asyncio
-from typing import Dict, Any
+from typing import Dict, Any, Optional
+
+from compute_res.memory.crdt_sync import StateCRDT
+from compute_res.network.signaling import SignalingClient
 
 try:
     import websockets
@@ -15,146 +16,93 @@ except ImportError:
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] WebRTCMesh: %(message)s')
 logger = logging.getLogger("Mesh")
 
-class CRDTManager:
-    """
-    Manages State Synchronization using an optimized Last-Writer-Wins Element Set (LWW-Element-Set).
-    """
-    def __init__(self):
-        self.state: Dict[str, Any] = {}
-        self.add_set: Dict[str, float] = {}
-        self.remove_set: Dict[str, float] = {}
-
-    def merge_remote_crdt(self, remote_crdt: Dict[str, Any]):
-        """Fast, deterministic conflict-resolution logic."""
-        remote_adds = remote_crdt.get('add_set', {})
-        remote_removes = remote_crdt.get('remove_set', {})
-        
-        for key, timestamp in remote_adds.items():
-            if key not in self.add_set or timestamp > self.add_set[key]:
-                self.add_set[key] = timestamp
-                
-        for key, timestamp in remote_removes.items():
-            if key not in self.remove_set or timestamp > self.remove_set[key]:
-                self.remove_set[key] = timestamp
-                
-        new_state = {}
-        for key, add_time in self.add_set.items():
-            if key not in self.remove_set or add_time > self.remove_set[key]:
-                new_state[key] = remote_crdt.get('state', {}).get(key, self.state.get(key))
-                
-        self.state = new_state
-        logger.debug(f"CRDT state mathematically resolved. Keys: {list(self.state.keys())}")
-
-
 class WebRTCMeshRouter:
     """
     Bridges local ZeroMQ IPC Broker to the decentralized WebRTC Swarm.
-    Implements Signaling Dropout for true P2P decentralization.
+    Uses SignalingClient for P2P SDP negotiation and StateCRDT for conflict-free memory sync.
     """
-    def __init__(self, node_id: str, swarm_id: str, signaling_url="ws://127.0.0.1:8765"):
+    def __init__(self, node_id: str, swarm_id: str, signaling_url: str = "ws://127.0.0.1:8765"):
         self.node_id = node_id
         self.swarm_id = swarm_id
         self.signaling_url = signaling_url
-        self.context = zmq.asyncio.Context()
-        self.crdt = CRDTManager()
-        
-        # ZeroMQ mapping
-        self.pub_socket = self.context.socket(zmq.PUB)
-        self.pub_socket.connect("tcp://127.0.0.1:5555")
-        
-        self.sub_socket = self.context.socket(zmq.SUB)
-        self.sub_socket.connect("tcp://127.0.0.1:5556")
-        self.sub_socket.setsockopt_string(zmq.SUBSCRIBE, "MESH_BROADCAST")
-        self.sub_socket.setsockopt_string(zmq.SUBSCRIBE, "SYS_CAPABILITY_UPDATE")
+        self.crdt = StateCRDT(node_id=node_id)
 
-        # WebRTC specific
-        self.peers = {} # node_id -> RTCPeerConnection
-        self.data_channels = {} # node_id -> RTCDataChannel
-        self.signaling_ws = None
+        self.peers: Dict[str, Any] = {}
+        self.data_channels: Dict[str, Any] = {}
+        self.signaling_client: Optional[SignalingClient] = None
 
-    async def _zmq_to_webrtc_loop(self):
-        """Listens for local pub/sub events and broadcasts them to the global P2P mesh."""
+    async def handle_incoming_signal(self, data: Dict[str, Any]):
+        msg_type = data.get("type")
+        sender_id = data.get("sender_id")
+        payload = data.get("payload", {})
+
+        if msg_type == "offer" and AIORTC_AVAILABLE:
+            logger.info(f"Received P2P Offer from {sender_id}")
+            pc = RTCPeerConnection()
+            self.peers[sender_id] = pc
+
+            @pc.on("datachannel")
+            def on_datachannel(channel):
+                self.data_channels[sender_id] = channel
+                logger.info(f"P2P DataChannel connected with {sender_id}")
+
+                @channel.on("message")
+                def on_message(message):
+                    try:
+                        packet = json.loads(message)
+                        if packet.get("type") == "crdt_sync":
+                            self.crdt.merge(packet.get("crdt", {}))
+                            logger.info(f"Merged CRDT state delta from peer {sender_id}")
+                    except Exception as e:
+                        logger.error(f"Error parsing P2P message: {e}")
+
+            sdp = payload.get("sdp")
+            if sdp:
+                await pc.setRemoteDescription(RTCSessionDescription(sdp=sdp, type="offer"))
+                answer = await pc.createAnswer()
+                await pc.setLocalDescription(answer)
+                if self.signaling_client:
+                    await self.signaling_client.send_signal(
+                        sender_id, "answer", {"sdp": pc.localDescription.sdp}
+                    )
+
+        elif msg_type == "answer" and AIORTC_AVAILABLE:
+            pc = self.peers.get(sender_id)
+            if pc and payload.get("sdp"):
+                await pc.setRemoteDescription(RTCSessionDescription(sdp=payload["sdp"], type="answer"))
+                logger.info(f"Established P2P answer with {sender_id}")
+
+    async def broadcast_crdt_sync(self):
+        """Periodically syncs StateCRDT deltas across active P2P data channels."""
         while True:
-            try:
-                topic_bytes, payload_bytes = await self.sub_socket.recv_multipart()
-                topic = topic_bytes.decode('utf-8')
-                payload = json.loads(payload_bytes.decode('utf-8'))
-                
-                mesh_envelope = {
-                    "origin": self.node_id,
-                    "topic": topic,
-                    "data": payload
-                }
-                
-                message_str = json.dumps(mesh_envelope)
-                
-                # Scatter broadcast directly over P2P DataChannels
-                for peer_id, channel in self.data_channels.items():
-                    if channel.readyState == "open":
-                        channel.send(message_str)
-                        logger.debug(f"Routed {topic} to peer {peer_id} via WebRTC DataChannel.")
-                        
-            except Exception as e:
-                logger.error(f"Error in ZMQ->WebRTC bridge: {e}")
+            await asyncio.sleep(5)
+            if not self.data_channels:
+                continue
 
-    async def _connect_signaling(self):
-        """Connects to Matchmaker, negotiates P2P, and drops out."""
-        if not AIORTC_AVAILABLE:
-            logger.warning("aiortc/websockets not available in environment. Skipping WebRTC signaling handshake.")
-            return
+            sync_packet = json.dumps({
+                "type": "crdt_sync",
+                "crdt": self.crdt.to_dict()
+            })
 
-        try:
-            async with websockets.connect(self.signaling_url) as ws:
-                self.signaling_ws = ws
-                
-                # 1. Join Swarm
-                await ws.send(json.dumps({"type": "join", "node_id": self.node_id, "swarm_id": self.swarm_id}))
-                logger.info(f"Connected to Signaling Server. Joined swarm {self.swarm_id}.")
-                
-                # 2. Listen for matchmaking events
-                async for message in ws:
-                    data = json.loads(message)
-                    msg_type = data.get("type")
-                    
-                    if msg_type == "roster":
-                        # Attempt to create P2P connections to all existing peers
-                        ice_urls = data.get("ice_servers", [{"urls": "stun:stun.l.google.com:19302"}])
-                        for peer_id in data.get("peers", []):
-                            await self._create_peer_connection(peer_id, ice_urls, initiator=True)
-                            
-                    elif msg_type == "peer_joined":
-                        # Wait for the new peer to send an offer
-                        logger.info(f"Peer {data.get('peer_id')} joined the swarm.")
-                        
-                    elif msg_type == "offer":
-                        peer_id = data.get("origin")
-                        sdp = data.get("sdp")
-                        # Handle incoming offer... (logic abbreviated for architectural scaffolding)
-                        logger.info(f"Received P2P Offer from {peer_id}.")
-                        
-        except Exception as e:
-            logger.error(f"Signaling error: {e}")
-
-    async def _create_peer_connection(self, peer_id, ice_urls, initiator=False):
-        """Initializes a direct P2P link to a node."""
-        logger.info(f"Initializing RTCPeerConnection to {peer_id}...")
-        # In a full implementation, we create the RTCPeerConnection, hook up the DataChannel,
-        # set local description, and send the offer back via self.signaling_ws.
-        
-        # Signaling Dropout Logic:
-        # channel.on("open", self._execute_signaling_dropout)
-        pass
-
-    def _execute_signaling_dropout(self):
-        """Triggered the moment the DataChannel opens. Severs the server link."""
-        logger.info("P2P DataChannel OPEN. Executing Signaling Dropout...")
-        if self.signaling_ws:
-            asyncio.create_task(self.signaling_ws.close())
-            self.signaling_ws = None
-            logger.info("Signaling Server link severed. Node is fully decentralized.")
+            for peer_id, channel in list(self.data_channels.items()):
+                try:
+                    if hasattr(channel, "readyState") and channel.readyState == "open":
+                        channel.send(sync_packet)
+                except Exception as e:
+                    logger.warning(f"Failed to send P2P CRDT sync to {peer_id}: {e}")
 
     async def start(self):
-        """Starts the WebRTC Mesh daemon."""
+        """Starts the WebRTC Mesh Router daemon."""
         logger.info(f"[{self.node_id}] Initializing Decentralized WebRTC Mesh Router...")
-        asyncio.create_task(self._zmq_to_webrtc_loop())
-        await self._connect_signaling()
+
+        if not AIORTC_AVAILABLE:
+            logger.warning("aiortc/websockets unavailable. P2P WebRTC data channels running in fallback mode.")
+            return
+
+        self.signaling_client = SignalingClient(server_url=self.signaling_url, node_id=self.node_id)
+        self.signaling_client.on_message_callback = self.handle_incoming_signal
+
+        connected = await self.signaling_client.connect()
+        if connected:
+            asyncio.create_task(self.signaling_client.listen())
+            asyncio.create_task(self.broadcast_crdt_sync())

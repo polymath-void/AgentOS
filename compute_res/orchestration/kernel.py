@@ -137,12 +137,21 @@ async def boot_sequence():
     # 4. Spin up the Event Gateway for Push Notifications
     asyncio.create_task(event_gateway())
     
+    # 5. Spin up the WebSocket Telemetry Gateway
+    try:
+        from compute_res.gateway.websocket_gateway import WebSocketTelemetryGateway
+        ws_gateway = WebSocketTelemetryGateway(host="0.0.0.0", port=8766)
+        asyncio.create_task(ws_gateway.start())
+    except Exception as e:
+        logger.warning(f"Failed to start WebSocket Telemetry Gateway: {e}")
+
     logger.info("===================================================")
     logger.info(" ComputeRes Kernel is ONLINE and fully Operational.   ")
     logger.info(" - IPC Broker: Active on tcp://127.0.0.1:5557/5558 ")
     logger.info(" - WebRTC Swarm: Node PrimeNode-01 listening.      ")
     logger.info(" - WASM Sandbox: Enforcing Fuel & RAM Constraints. ")
     logger.info(" - Event Gateway: Ready to dispatch webhooks.      ")
+    logger.info(" - Telemetry Gateway: Streaming on ws://0.0.0.0:8766 ")
     logger.info("===================================================")
     
     # Keep main thread alive

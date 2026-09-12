@@ -15,7 +15,8 @@ function execPromise(cmd) {
 }
 
 const server = http.createServer(async (req, res) => {
-  const url = new URL(req.url, `http://${req.headers.host}`);
+  const host = req.headers.host || 'localhost';
+  const url = new URL(req.url, 'http://' + host);
 
   // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -87,8 +88,8 @@ const server = http.createServer(async (req, res) => {
           return;
         }
 
-        const prompt = `Summarize and format this text clearly for mobile view:\n\n${textToProcess}`;
-        const cmd = `openclaw agent --agent main --message ${JSON.stringify(prompt)} 2>&1`;
+        const prompt = 'Summarize and format this text clearly for mobile view:\n\n' + textToProcess;
+        const cmd = 'openclaw agent --agent main --message ' + JSON.stringify(prompt) + ' 2>&1';
         const rawAiOut = await execPromise(cmd);
 
         let cleaned = rawAiOut;
@@ -97,7 +98,7 @@ const server = http.createServer(async (req, res) => {
         }
 
         // Copy back to clipboard
-        await execPromise(`echo ${JSON.stringify(cleaned)} | termux-clipboard-set 2>/dev/null || true`);
+        await execPromise('echo ' + JSON.stringify(cleaned) + ' | termux-clipboard-set 2>/dev/null || true');
         await execPromise("termux-toast 'Dashboard: Result copied to clipboard!' 2>/dev/null || true");
 
         res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -135,7 +136,7 @@ const server = http.createServer(async (req, res) => {
         });
       } else {
         res.writeHead(500);
-        res.end(`Server Error: ${err.code}`);
+        res.end('Server Error: ' + err.code);
       }
     } else {
       res.writeHead(200, { 'Content-Type': mimeTypes[ext] || 'text/plain' });
@@ -145,5 +146,5 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 [Sentinel Dashboard] Server running at http://127.0.0.1:${PORT}/`);
+  console.log('🚀 [Sentinel Dashboard] Server running at http://127.0.0.1:' + PORT + '/');
 });

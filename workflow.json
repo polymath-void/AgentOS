@@ -1,0 +1,8 @@
+{
+    "type": "JSON_Task",
+    "status": "pending",
+    "action": "execute_agents",
+    "agents": [
+        "architect_designer"
+    ]
+}

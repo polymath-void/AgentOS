@@ -77,6 +77,7 @@ class BaseAgent:
                 return f"[EvolvOS Error] Failed to mutate codebase: {e}"
                 
         if task.startswith("SINGULARITY_TEST_EVOLVE"):
+            pass
                     
         if task.startswith("SINGULARITY_TEST_SWARM"):
             # PROVE: Nano-Neural WebRTC Mesh 
