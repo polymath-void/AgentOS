@@ -1,6 +1,8 @@
 # Python
+**/__pycache__/
 __pycache__/
 *.py[cod]
+**/*.pyc
 *$py.class
 *.egg-info/
 .eggs/
@@ -9,8 +11,11 @@ build/
 
 # Databases & Logs
 *.db
+**/*.db
 *.sqlite
+**/*.sqlite
 *.log
+**/*.log
 interactions.db
 agy_nodeos.db
 debug_daemon.log
@@ -20,3 +25,4 @@ daemon.log
 .jsagent/
 shared_context/
 *.whl
+
