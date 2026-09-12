@@ -35,12 +35,42 @@ def build_skill_package(source_path: str, name: str, version: str = "1.0.0", fue
     print(f"   Manifest created at: {manifest_path}")
     return out_dir
 
+def install_systemd_service():
+    """Installs systemd user service for auto-booting Compute-OS on startup."""
+    user_systemd_dir = os.path.expanduser("~/.config/systemd/user")
+    os.makedirs(user_systemd_dir, exist_ok=True)
+    service_path = os.path.join(user_systemd_dir, "compute-os.service")
+
+    python_bin = sys.executable
+    service_content = f"""[Unit]
+Description=Compute-OS AI Operating System Kernel Daemon
+Documentation=https://github.com/polymath-void/Compute-OS
+After=network.target
+
+[Service]
+Type=simple
+ExecStart={python_bin} -m compute_res.orchestration.kernel
+Restart=always
+RestartSec=3
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=default.target
+"""
+    with open(service_path, "w", encoding="utf-8") as f:
+        f.write(service_content)
+
+    print(f"✅ Created systemd user service unit at: {service_path}")
+    print("\nTo enable auto-boot on system startup, execute:")
+    print("  systemctl --user daemon-reload")
+    print("  systemctl --user enable --now compute-os")
+
 def main():
-    parser = argparse.ArgumentParser(description="ComputeRes AI Operating System CLI Tool")
+    parser = argparse.ArgumentParser(description="Compute-OS AI Operating System CLI Tool")
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
     # Command: boot
-    boot_parser = subparsers.add_parser("boot", help="Boot the ComputeRes Kernel daemon")
+    boot_parser = subparsers.add_parser("boot", help="Boot the Compute-OS Kernel daemon")
 
     # Command: build
     build_parser = subparsers.add_parser("build", help="Package a skill or binary into a compute-res.json bundle")
@@ -50,7 +80,10 @@ def main():
     build_parser.add_argument("--fuel", type=int, default=10000000, help="Fuel allocation limit")
 
     # Command: status
-    status_parser = subparsers.add_parser("status", help="Check ComputeRes kernel status")
+    status_parser = subparsers.add_parser("status", help="Check Compute-OS kernel status")
+
+    # Command: install-service
+    service_parser = subparsers.add_parser("install-service", help="Install systemd user service for automatic boot on system startup")
 
     args = parser.parse_args()
 
@@ -58,7 +91,7 @@ def main():
         build_skill_package(args.source, args.name, args.version, args.fuel)
 
     elif args.command == "boot":
-        print("🚀 Booting ComputeRes Kernel Daemon...")
+        print("🚀 Booting Compute-OS Kernel Daemon...")
         from compute_res.orchestration.kernel import main as boot_kernel
         boot_kernel()
 
@@ -66,11 +99,15 @@ def main():
         async def _check():
             client = ComputeResClient()
             res = await client.execute_dynamic_code("def run(**kwargs): return {'kernel': 'ONLINE'}")
-            print("ComputeRes Kernel Status:", res)
+            print("Compute-OS Kernel Status:", res)
         asyncio.run(_check())
+
+    elif args.command == "install-service":
+        install_systemd_service()
 
     else:
         parser.print_help()
 
 if __name__ == "__main__":
     main()
+

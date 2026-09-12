@@ -1,0 +1,14 @@
+[Unit]
+Description=Compute-OS AI Operating System Kernel Daemon
+Documentation=https://github.com/polymath-void/Compute-OS
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/env python3 -m compute_res.orchestration.kernel
+Restart=always
+RestartSec=3
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=default.target
