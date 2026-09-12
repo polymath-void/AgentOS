@@ -1,5 +1,5 @@
 <div align="center">
-  <h1>🌌 ComputeRes</h1>
+  <h1>🌌 Compute-OS</h1>
   <p><strong>The Operating System Built Exclusively for Artificial Intelligence.</strong></p>
   
   [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
@@ -13,7 +13,7 @@
 ---
 
 ## 🚀 The Philosophy
-**ComputeRes does not have a brain.** It does not contain an LLM. It does not think. 
+**Compute-OS does not have a brain.** It does not contain an LLM. It does not think. 
 
 It is the **Environment**. 
 
@@ -23,11 +23,11 @@ It is a mathematically rigorous, mathematically secure, decentralized operating 
 
 ## 🧠 Core Architecture
 
-ComputeRes solves the three hardest problems in AI Agent deployment: **Inter-Process Communication (IPC)**, **Security Sandboxing**, and **Decentralized Swarming**.
+Compute-OS solves the three hardest problems in AI Agent deployment: **Inter-Process Communication (IPC)**, **Security Sandboxing**, and **Decentralized Swarming**.
 
 1. **The Kernel (ZeroMQ):** An ultra-fast, non-blocking asynchronous `ROUTER/DEALER` broker that mathematically queues intents from external LLMs and routes them to internal OS workers instantly.
 2. **The Sandbox (Wasmtime):** AI Agents are inherently untrustworthy. Every system operation is executed within a strict WebAssembly (WASM) container enforcing absolute memory capping and CPU instruction metering ("Fuel"). If an agent writes infinite loops, the OS cuts its fuel and kills it gracefully.
-3. **The Swarm Mesh (WebRTC):** ComputeRes utilizes `aiortc` (SCTP over DTLS over UDP) to punch through NAT firewalls, allowing multiple ComputeRes nodes running on laptops, edge devices, and servers to sync decentralized state schemas via CRDTs without a centralized cloud.
+3. **The Swarm Mesh (WebRTC):** Compute-OS utilizes `aiortc` (SCTP over DTLS over UDP) to punch through NAT firewalls, allowing multiple Compute-OS nodes running on laptops, edge devices, and servers to sync decentralized state schemas via CRDTs without a centralized cloud.
 
 *For deep architectural blueprints, see the [Architecture Directory](plan/docker_aiortc_blueprint.md).*
 
@@ -35,39 +35,39 @@ ComputeRes solves the three hardest problems in AI Agent deployment: **Inter-Pro
 
 ## ⚡ Deployment: The Zero-Compilation Matrix
 
-Deploying C-extensions (like WebRTC codecs and ZeroMQ bindings) usually destroys CI/CD pipelines. ComputeRes is engineered to deploy in **under 15 seconds**.
+Deploying C-extensions (like WebRTC codecs and ZeroMQ bindings) usually destroys CI/CD pipelines. Compute-OS is engineered to deploy in **under 15 seconds**.
 
 By locking the architecture to `python:3.10-slim-bullseye`, we guarantee the resolution of pre-compiled `manylinux2014` wheels. 
 
 ```bash
 # 1. Clone the Matrix
-git clone https://github.com/polymath-void/ComputeRes.git
-cd ComputeRes
+git clone https://github.com/polymath-void/Compute-OS.git
+cd Compute-OS
 
 # 2. Build the OS (Takes < 15 seconds)
-docker build -t compute_res-core .
+docker build -t compute_os-core .
 
 # 3. Boot the Kernel (Host networking for WebRTC UDP performance)
-docker run -d --name compute_res-kernel --network host compute_res-core
+docker run -d --name compute_os-kernel --network host compute_os-core
 ```
 
 ---
 
 ## 📱 Hardware Capabilities: Rooted vs. Non-Rooted Edge Devices
 
-ComputeRes is designed to run everywhere—from AWS clusters down to Android smartphones in your pocket. 
+Compute-OS is designed to run everywhere—from AWS clusters down to Android smartphones in your pocket. 
 
 ### 🟢 Rooted Devices & Standard OS (Linux, macOS, Windows)
 If you have root access to `cgroups` and namespaces (e.g., standard servers, laptops, or rooted Android devices), we **strongly recommend** the Docker deployment strategy above. The container isolates the WebRTC C-bindings and prevents capability bleeding from the Wasmtime engine.
 
 ### 🟡 Non-Rooted Environments (e.g., Android Termux)
-On heavily sandboxed, non-rooted edge devices, the Docker Daemon (`dockerd`) cannot run natively. However, the **ComputeRes Kernel is fully OS-agnostic**. 
+On heavily sandboxed, non-rooted edge devices, the Docker Daemon (`dockerd`) cannot run natively. However, the **Compute-OS Kernel is fully OS-agnostic**. 
 
 You can bypass Docker entirely and boot the OS directly into the native Python runtime environment:
 
 ```bash
 # 1. Install directly from PyPI (Core OS only - bypasses WebRTC C-compilers)
-pip install compute_res
+pip install compute-os
 
 # (Optional) If you want full WebRTC capability natively on Android Termux:
 # Run the included Termux build optimizer which natively compiles PyAV C-bindings
@@ -76,36 +76,34 @@ chmod +x termux_setup.sh
 ./termux_setup.sh
 
 # 2. Boot the native Kernel in one tab
-compute_res
+compute-os boot
 
 # 3. Boot the Telemetry TUI Dashboard in a second tab
 python3 -m compute_res.telemetry.core.app
 ```
-*Note: The native python deployment seamlessly maps the `~/.compute_res/tools/` filesystem in your home directory to maintain structural consistency without container volumes.*
 
 ---
 
 ## 🔌 Connecting your AI (The MCP Protocol)
 
-ComputeRes natively exposes the **Model Context Protocol (FastMCP)** via standard input/output. This means you can plug ComputeRes into any AI client (Claude Desktop, Cursor, Gemini, or custom swarms) by adding it to your `mcp_config.json`:
+Compute-OS natively exposes the **Model Context Protocol (FastMCP)** via standard input/output. This means you can plug Compute-OS into any AI client (Claude Desktop, Cursor, Gemini, or custom swarms) by adding it to your `mcp_config.json`:
 
 ```json
 {
   "mcpServers": {
     "compute_res": {
       "command": "python3",
-      "args": ["/absolute/path/to/ComputeRes/compute_res/gateway/mcp_server.py"]
+      "args": ["-m", "compute_res.gateway.mcp_server"]
     }
   }
 }
 ```
-*Note: Make sure the `compute_res-kernel` daemon is running in the background to handle the ZeroMQ routing!*
 
 ---
 
 ## 🤝 Calling All Engineers (Contribute!)
 
-ComputeRes is bleeding-edge. We are actively pushing the boundaries of what autonomous LLM swarms can do on bare-metal systems. 
+Compute-OS is bleeding-edge. We are actively pushing the boundaries of what autonomous LLM swarms can do on bare-metal systems. 
 
 **We need your help to build the future:**
 * **Rust/WASM Engineers:** Help us optimize the Wasmtime memory bounds and build tighter capability sandboxes.
@@ -118,3 +116,4 @@ ComputeRes is bleeding-edge. We are actively pushing the boundaries of what auto
 3. Submit a PR. We review everything. 
 
 Star the repo ⭐ if you believe in the future of Agentic Operating Systems.
+

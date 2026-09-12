@@ -3,9 +3,9 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "compute-res"
+name = "compute-os"
 version = "1.0.0"
-description = "ComputeRes High-Performance Swarm Ecosystem"
+description = "Compute-OS High-Performance Swarm Ecosystem"
 readme = "README.md"
 authors = [{ name = "Polymath Void", email = "shuvops@gmail.com" }]
 requires-python = ">=3.10"
@@ -20,7 +20,10 @@ dependencies = [
 
 [project.scripts]
 compute_res = "compute_res.orchestration.kernel:main"
+compute_os = "compute_res.orchestration.kernel:main"
+compute-os = "compute_res.cli:main"
 compute-res = "compute_res.cli:main"
+
 
 [tool.setuptools.packages.find]
 where = ["."]
