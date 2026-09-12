@@ -17,6 +17,13 @@ class ComputeResClient:
         self.timeout_ms = timeout_ms
         self.context = zmq.asyncio.Context.instance()
 
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        pass
+
+
     async def _send_request(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         socket = self.context.socket(zmq.REQ)
         socket.connect(self.broker_url)
